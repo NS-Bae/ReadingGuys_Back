@@ -16,7 +16,7 @@ export class S3Service {
     });
   }
 
-  async uploadRecordFile(localFilePath: string, s3Key: string) {
+  async uploadRecordFile( localFilePath: string, s3Key: string ) {
     const fileContent = fs.readFileSync(localFilePath);
 
     const params = {
@@ -28,5 +28,29 @@ export class S3Service {
 
     const result = await this.s3.upload(params).promise();
     return result.Location; // S3 URL 반환
+  }
+
+  async getJsonFile( s3Key: string ): Promise<any> {
+    const params = {
+      Bucket: this.bucketName,
+      Key: s3Key,
+    };
+
+    try
+    {
+      const data = await this.s3.getObject(params).promise();
+      if(!data.Body)
+      {
+        throw new Error('S3 파일이 비어있습니다.');
+      }
+
+      const jsonString = data.Body.toString('utf-8'); // Buffer → 문자열
+      return JSON.parse(jsonString);
+    }
+    catch(error)
+    {
+      console.error('S3 JSON 읽기 실패:', error);
+      throw error;
+    }
   }
 }
