@@ -35,7 +35,7 @@ import { RecordsModule } from './record/records.module';
     }),
     JwtModule.register({
       secret: process.env.JWT_SECRET,
-      signOptions: { expiresIn: '30m' },
+      signOptions: { expiresIn: '2h' },
     }),
     ScheduleModule.forRoot(),
   ],
