@@ -99,7 +99,6 @@ export class AuthService {
 
     const payload = { 
       id: user.id,
-      userName: user.userName,
       userType: user.userType,
       academyId: user.academyId,
       isItOk: user.ok,
