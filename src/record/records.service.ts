@@ -8,6 +8,7 @@ import * as fs from 'fs';
 import { Records } from './records.entity';
 import { SearchDetailRecordDto } from '../dto/searchOneWorkbookOneStudent.dto';
 import { ExamRecordDataDto } from 'src/dto/createExamRecord.dto';
+import { ReadFileParamsDto } from 'src/dto/reedFile.dto';
 /* import { S3Service } from '../aws/s3.service';
  */
 @Injectable()
@@ -200,6 +201,20 @@ export class RecordsService {
     {
       console.error('DB 저장 오류:', error);
       throw new InternalServerErrorException('시험 결과 DB 저장 실패');
+    }
+  }
+
+  async readRecordJsonFile(readFileParams: ReadFileParamsDto)
+  {
+    const link = readFileParams.readFileParams.recordLink;
+    if(fs.existsSync(link))
+    {
+      const content = fs.readFileSync(link, 'utf-8');
+      return JSON.parse(content);
+    }
+    else
+    {
+      return { error: 'File not found' };
     }
   }
 }

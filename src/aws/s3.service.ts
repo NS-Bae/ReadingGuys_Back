@@ -1,6 +1,5 @@
 import { Injectable } from '@nestjs/common';
 import { S3 } from 'aws-sdk';
-import * as path from 'path';
 import * as fs from 'fs';
 
 @Injectable()
