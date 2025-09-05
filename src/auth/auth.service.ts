@@ -4,7 +4,7 @@ import { Injectable, Logger, UnauthorizedException } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { Response } from 'express';
 
-import { LoginDto } from './dto/login.dto';
+import { LoginDto, UserInfoDto } from './dto/login.dto';
 import { UsersService } from '../users/users.service';
 
 @Injectable()
@@ -38,23 +38,30 @@ export class AuthService {
     }
     
     const { password, ...result } = user;
+    console.log(user);
     return result;
   }
   //일반 로그인
-  async login(loginDto: LoginDto): Promise<{ accessToken: string, userInfo: string }> 
+  async login(loginDto: LoginDto): Promise<{ accessToken: string, userInfo: UserInfoDto }> 
   {
     const user = await this.validateUser(loginDto);
 
-    const payload = { 
+    const payload =
+    { 
       id: user.id,
-      userName: user.userName,
-      userType: user.userType,
       AcademyID: user.AcademyID,
-      isItOk: user.ok };
+      userType: user.userType,
+      isItOk: user.ok
+    };
+    const refinedUserInfo =
+    {
+      id: user.id,
+      AcademyID: user.AcademyID
+    }
 
     const accessToken = this.jwtService.sign(payload);
 
-    return { accessToken, userInfo: user };
+    return { accessToken, userInfo: refinedUserInfo };
   }
   //관리자인증
   async validateManager(loginDto: LoginDto): Promise<any>
