@@ -38,7 +38,6 @@ export class AuthService {
     }
     
     const { password, ...result } = user;
-    console.log(user);
     return result;
   }
   //일반 로그인
