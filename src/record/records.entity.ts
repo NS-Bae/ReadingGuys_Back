@@ -6,33 +6,39 @@ import { Workbook } from '../workbook/workbooks.entity';
 @Entity('ExamRecords')
 export class Records {
   @PrimaryColumn({ type: 'varchar', length: 255 })
-  AcademyID: string;
+  hashedAcademyID: string;
 
   @PrimaryColumn({ type: 'varchar', length: 20 })
-  UserID: string;
+  hashedUserID: string;
 
   @PrimaryColumn({ type: 'int' })
-  WorkbookID: number;
+  workbookID: number;
 
   @PrimaryColumn({ type: 'datetime' })
-  ExamDate: Date;
+  examDate: Date;
 
   @Column({ type: 'decimal', precision: 5, scale: 2 })
-  ProgressRate: number;
+  progressRate: number;
 
-  @Column({ type: 'varchar', length: 255 })
-  RecordLink: string;
+  @Column({ type: 'varbinary', length: 255 })
+  encryptedRecordLink: Buffer;
+
+  @Column({ type: 'varbinary', length: 12 })
+  ivRecordLink: Buffer;
+
+  @Column({ type: 'varbinary', length: 16 })
+  authTagRecordLink: Buffer;
 
   // 관계 설정
   @ManyToOne(() => Academy, (academy) => academy.examRecords)
-  @JoinColumn({ name: 'AcademyID' })
+  @JoinColumn({ name: 'hashedAcademyID', referencedColumnName: 'hashedAcademyId' })
   academy: Academy;
 
   @ManyToOne(() => User, (user) => user.examRecords)
-  @JoinColumn({ name: 'UserID' })
+  @JoinColumn({ name: 'hashedUserId', referencedColumnName: 'hashedUserId' })
   user: User;
 
   @ManyToOne(() => Workbook, (workbook) => workbook.examRecords)
-  @JoinColumn({ name: 'WorkbookID' })
+  @JoinColumn({ name: 'workbookId', referencedColumnName: 'workbookId' })
   workbook: Workbook;
 }

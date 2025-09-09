@@ -9,19 +9,25 @@ import {
   OneToMany,
 } from 'typeorm';
 import * as bcrypt from 'bcrypt';
+
 import { Academy } from '../academy/academy.entity';
 import { Records } from '../record/records.entity';
-
-export enum UserType {
-  관리자 = '관리자',
-  교사 = '교사',
-  학생 = '학생',
-}
+import { UserType } from 'src/others/other.types';
+import { TermsAgreement } from 'src/others/agreement.entity';
 
 @Entity('Users') // 테이블 이름을 Users로 설정
 export class User {
   @PrimaryColumn({ type: 'varchar', length: 20 })
-  id: string;
+  hashedUserId: string;
+
+  @Column({ type: 'varbinary', length: 255, nullable: false })
+  encryptedUserId: Buffer;
+
+  @Column({ type: 'varbinary', length: 12, nullable: false })
+  ivUserId: Buffer;
+
+  @Column({ type: 'varbinary', length: 16, nullable: false })
+  authTagUserId: Buffer;
 
   @Column({ type: 'varchar', length: 255, nullable: false })
   password: string;
@@ -32,11 +38,17 @@ export class User {
     this.password = await bcrypt.hash(this.password, 10);
   }
 
-  @Column({ type: 'varchar', length: 100, nullable: false })
-  userName: string;
+  @Column({ type: 'varbinary', length: 255, nullable: false })
+  encryptedUserName: Buffer;
 
-  @Column({ type: 'varchar', length: 255 })
-  AcademyID: string;
+  @Column({ type: 'varbinary', length: 12, nullable: false })
+  ivUserName: Buffer;
+
+  @Column({ type: 'varbinary', length: 16, nullable: false })
+  authTagUserName: Buffer;
+
+  @Column({ type: 'varchar', length: 255, nullable: false })
+  hashedAcademyId: string;
 
   @Column({
     type: 'enum',
@@ -52,7 +64,10 @@ export class User {
   @OneToMany(() => Records, (examRecord) => examRecord.user)
   examRecords: Records[];
 
+  @OneToMany(() => TermsAgreement, (termsAgreement) => termsAgreement.user)
+  termsAgreements: TermsAgreement[];
+
   @ManyToOne(() => Academy, (academy) => academy.users , { onDelete: 'CASCADE' })
-  @JoinColumn({ name: 'AcademyID' })
+  @JoinColumn({ name: 'hashedAcademyId', referencedColumnName: 'hashedAcademyId' })
   academy: Academy;
 }

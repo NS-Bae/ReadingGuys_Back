@@ -1,16 +1,11 @@
-import { Entity, Column, PrimaryColumn, OneToMany } from 'typeorm';
+import { Entity, Column, PrimaryColumn, OneToMany, PrimaryGeneratedColumn } from 'typeorm';
 import { Records } from '../record/records.entity';
-
-export enum Difficulty {
-  쉬움 = 'easy',
-  보통 = 'normal',
-  어려움 = 'hard',
-}
+import { Difficulty } from 'src/others/other.types';
 
 @Entity( 'Workbooks' )
 export class Workbook {
-  @PrimaryColumn({ type: 'varchar', length: 255 })
-  workbookId: string;
+  @PrimaryGeneratedColumn()
+  workbookId: number;
 
   @Column({ type: 'boolean', nullable: false })
   isPaid: boolean;
@@ -28,8 +23,14 @@ export class Workbook {
   @Column({ type: 'date', nullable: false })
   releaseMonth: Date;
 
-  @Column({ type: 'varchar', length: 255, nullable: false })
-  storageLink: string;
+  @Column({ type: 'varbinary', length: 255, nullable: false })
+  encryptedStorageLink: Buffer;
+
+  @Column({ type: 'varbinary', length: 12, nullable: false })
+  ivStorageLink: Buffer;
+
+  @Column({ type: 'varbinary', length: 16, nullable: false })
+  authTagStorageLink: Buffer;
 
   @OneToMany(() => Records, (examRecord) => examRecord.workbook)
   examRecords: Records[];
