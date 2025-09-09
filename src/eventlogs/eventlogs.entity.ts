@@ -1,5 +1,5 @@
 import { Column, Entity, PrimaryGeneratedColumn } from "typeorm";
-import { EventType } from "./other.types";
+import { EventType } from "../others/other.types";
 
 
 @Entity( 'EventLogs' )

@@ -10,6 +10,8 @@ import { WorkbooksModule } from './workbook/workbooks.module';
 import { FirebaseModule } from './firebase/firebase.module';
 import { AcademyModule } from './academy/academy.module';
 import { RecordsModule } from './record/records.module';
+import { TermsAgreementModule } from './agreement/agreement.module';
+import { EventLogsModule } from './eventlogs/eventlogs.module';
 
 @Module({
   imports: [
@@ -19,6 +21,8 @@ import { RecordsModule } from './record/records.module';
     FirebaseModule,
     AcademyModule,
     RecordsModule,
+    TermsAgreementModule,
+    EventLogsModule,
     ConfigModule.forRoot({
       envFilePath: '.env',
       isGlobal: true,

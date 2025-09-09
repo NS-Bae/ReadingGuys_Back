@@ -1,5 +1,5 @@
 import { Column, Entity, JoinColumn, ManyToOne, PrimaryGeneratedColumn } from "typeorm";
-import { TermsTypes } from "./other.types";
+import { TermsTypes } from "../others/other.types";
 import { User } from "src/users/users.entity";
 
 

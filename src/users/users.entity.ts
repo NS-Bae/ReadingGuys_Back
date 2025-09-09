@@ -13,7 +13,7 @@ import * as bcrypt from 'bcrypt';
 import { Academy } from '../academy/academy.entity';
 import { Records } from '../record/records.entity';
 import { UserType } from 'src/others/other.types';
-import { TermsAgreement } from 'src/others/agreement.entity';
+import { TermsAgreement } from '../agreement/agreement.entity';
 
 @Entity('Users') // 테이블 이름을 Users로 설정
 export class User {
