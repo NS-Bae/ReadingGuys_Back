@@ -5,11 +5,15 @@ import { Cron } from "@nestjs/schedule";
 import { endOfMonth } from 'date-fns';
 
 import { Academy } from "./academy.entity";
-import { User, UserType } from "../users/users.entity";
-import { NotFoundError } from "rxjs";
-import { DeleteCheckedDto } from '../dto/deleteChecked.dto';
+import { User } from "../users/users.entity";
+import { EventLogs } from "src/eventlogs/eventlogs.entity";
+
+import { UserType } from "src/others/other.types";
+
+import { DeleteAcademyCheckedDto } from '../dto/deleteChecked.dto';
 import { UpdateAcademyDto } from "../dto/update-academy.dto";
 import { AddNewAcademyDto } from '../dto/create-academy.dto';
+
 @Injectable()
 export class AcademyService
 {
@@ -19,6 +23,8 @@ export class AcademyService
     private academyRepository: Repository<Academy>,
     @InjectRepository(User)
     private userRepository: Repository<User>,
+    @InjectRepository(EventLogs)
+
     private dataSource: DataSource,
   ) {}
 
@@ -85,12 +91,12 @@ export class AcademyService
     return await this.academyRepository.find();
   }
 
-  async findOne(academyId: string): Promise<Academy>
+  async findOne(hashedAcademyId: string): Promise<Academy>
   {
-    return await this.academyRepository.findOne({where : {academyId}});
+    return await this.academyRepository.findOne({where : {hashedAcademyId}});
   }
 
-  async deleteData(deleteCheckedDto: DeleteCheckedDto): Promise<{ deletedCount: number }>
+  async deleteData(deleteCheckedDto: DeleteAcademyCheckedDto): Promise<{ deletedCount: number }>
   {
     const { checkedRows } = deleteCheckedDto;
 
@@ -99,20 +105,56 @@ export class AcademyService
       throw new NotFoundException('삭제할 데이터가 없습니다.');
     }
 
+    const queryRunner = this.dataSource.createQueryRunner();
+    await queryRunner.connect();
+    await queryRunner.startTransaction();
+
     try
     {
-      const deleteResult = await this.academyRepository
+      const deleteResult = await queryRunner.manager
         .createQueryBuilder()
         .delete()
         .from(Academy)
-        .whereInIds(checkedRows.map(row => ({academyId: row.data1, academyName: row.data2})))
+        .whereInIds(
+          checkedRows.map((row) => ({ heahedAcademyId: row.data1 })),
+        )
         .execute();
+      const deletedCount = deleteResult.affected || 0
+      
+      if(deletedCount > 0)
+      {
+        await queryRunner.manager
+          .createQueryBuilder()
+          .insert()
+          .into('EventLogs')
+          .values(
+            checkedRows.map((row) => ({
+              hashedUserId: row.data2,
+              heahedAcademyId: row.data1,
+              eventType: 'academy-delete-success',
+              encryptedDeviceInfo: row.data3,
+              ivDeviceInfo: row.data4,
+              authTagDeviceInfo: row.data5,
+              encryptedIPAdress: row.data6,
+              ivIPAdress: row.data7,
+              authTagIPAdress: row.data8,
+              eventTime: new Date(),
+            })),
+          )
+          .execute();
+      }
 
-      return {deletedCount: deleteResult.affected || 0};
+      await queryRunner.commitTransaction();
+      return { deletedCount };
     }
     catch(error)
     {
-      throw new InternalServerErrorException('데이터 삭제중 오류가 발생했습니다.');
+      await queryRunner.rollbackTransaction();
+      throw new InternalServerErrorException('정보 삭제중 오류가 발생해서 삭제에 실패했습니다.');
+    }
+    finally
+    {
+      await queryRunner.release();
     }
   }
   

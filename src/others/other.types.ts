@@ -19,6 +19,8 @@ export enum EventType {
   결과저장 = 'save-record',
   구독결제 = 'paid',
   로그아웃 = 'log-out',
+  학원삭제성공 = 'academy-delete-success',
+  학원삭제실패 = 'academy-delete-failed',
 }
 
 export enum TermsTypes {
