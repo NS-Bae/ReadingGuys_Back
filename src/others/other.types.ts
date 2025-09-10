@@ -17,10 +17,19 @@ export enum EventType {
   시험시작 = 'start-exam',
   시험종료 = 'end-exam',
   결과저장 = 'save-record',
-  구독결제 = 'paid',
+  구독결제성공 = 'paid-success',
+  구독결제실패 = 'paid-failed',
   로그아웃 = 'log-out',
   학원삭제성공 = 'academy-delete-success',
   학원삭제실패 = 'academy-delete-failed',
+  약관동의성공 = 'agreement-success',
+  약관동의실패 = 'agreement-failed',
+  회원상태변경성공 = 'user-paid-status-change-success',//여기부터
+  회원상태변경실패 = 'user-paid-status-change-failed',
+  학원상태변경성공 = 'academy-paid-status-change-success',
+  학원상태변경실패 = 'academy-paid-status-change-failed',
+  신규학원등록성공 = 'regist-new-academy-success',
+  신규학원등록실패 = 'regist-new-academy-failed',
 }
 
 export enum TermsTypes {

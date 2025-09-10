@@ -5,7 +5,7 @@ import { Multer } from "multer";
 
 import { WorkbookService } from './workbooks.service';
 import { UploadBookDto } from '../dto/uploadWorkbook.dto';
-import { DeleteCheckedDto } from '../dto/deleteChecked.dto';
+import { DeleteCheckedDto } from '../dto/multiChecked.dto';
 import { UpdateBookPaidDto } from 'src/dto/updateWorkbookPaid.dto';
 import { multerConfig } from './multer.config';
 

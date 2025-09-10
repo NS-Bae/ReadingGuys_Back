@@ -4,9 +4,9 @@ import { Type } from 'class-transformer';
 class NewAcademyDto 
 {
   @IsString()
-  data1: string;
+  data1: string; //학원 id
   @IsString()
-  data2: string;
+  data2: string; //학원 이름
 };
 
 export class AddNewAcademyDto

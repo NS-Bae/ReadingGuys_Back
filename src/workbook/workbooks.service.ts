@@ -12,7 +12,7 @@ import { Workbook } from './workbooks.entity';
 import { Academy } from '../academy/academy.entity';
 import { FirebaseService } from '../firebase/firebase.service';
 import { UploadBookDto } from '../dto/uploadWorkbook.dto';
-import { DeleteCheckedDto } from '../dto/deleteChecked.dto';
+import { DeleteCheckedDto } from '../dto/multiChecked.dto';
 import { UpdateBookPaidDto } from '../dto/updateWorkbookPaid.dto';
 import { unlink } from "fs/promises";
 

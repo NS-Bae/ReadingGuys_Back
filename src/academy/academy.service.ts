@@ -1,4 +1,4 @@
-import { Injectable, InternalServerErrorException, Logger, NotFoundException } from "@nestjs/common";
+import { BadRequestException, Injectable, InternalServerErrorException, Logger, NotFoundException } from "@nestjs/common";
 import { InjectRepository } from "@nestjs/typeorm";
 import { Repository, DataSource } from "typeorm";
 import { Cron } from "@nestjs/schedule";
@@ -6,13 +6,12 @@ import { endOfMonth } from 'date-fns';
 
 import { Academy } from "./academy.entity";
 import { User } from "../users/users.entity";
-import { EventLogs } from "src/eventlogs/eventlogs.entity";
 
 import { UserType } from "src/others/other.types";
 
-import { DeleteAcademyCheckedDto } from '../dto/deleteChecked.dto';
-import { UpdateAcademyDto } from "../dto/update-academy.dto";
-import { AddNewAcademyDto } from '../dto/create-academy.dto';
+import { DeleteAcademyCheckedDto, RegistAcademyCheckedDto, UpdateAcademyPaidCheckedDto } from '../dto/multiChecked.dto';
+import { EventLogsService } from "../eventlogs/eventlogs.service";
+import { encryptAES256GCM, hashSHA256 } from "src/utill/encryption.service";
 
 @Injectable()
 export class AcademyService
@@ -23,8 +22,7 @@ export class AcademyService
     private academyRepository: Repository<Academy>,
     @InjectRepository(User)
     private userRepository: Repository<User>,
-    @InjectRepository(EventLogs)
-
+    private readonly eventLogsService: EventLogsService,
     private dataSource: DataSource,
   ) {}
 
@@ -59,7 +57,7 @@ export class AcademyService
         .update(Academy)
         .set({paymentStatus: false})
         .where('academyId IN (:...academyIds)', {
-          academyIds: expiredAcademies.map(academy => academy.academyId),
+          academyIds: expiredAcademies.map(academy => academy.hashedAcademyId),
         })
         .execute();
       
@@ -68,7 +66,7 @@ export class AcademyService
         .update(User)
         .set({ ok: false })
         .where('academyId IN (:...academyIds)', {
-          academyIds: expiredAcademies.map(academy => academy.academyId),
+          academyIds: expiredAcademies.map(academy => academy.hashedAcademyId),
         })
         .execute();
 
@@ -99,9 +97,19 @@ export class AcademyService
   async deleteData(deleteCheckedDto: DeleteAcademyCheckedDto): Promise<{ deletedCount: number }>
   {
     const { checkedRows } = deleteCheckedDto;
+    const logCommonData = {
+      data1: checkedRows[0].data2,
+      data2: checkedRows[0].data3,
+      data3: checkedRows[0].data4,
+      data4: checkedRows[0].data5,
+      data5: checkedRows[0].data6,
+      data6: checkedRows[0].data7,
+      data7: checkedRows[0].data8,
+    }
 
     if(checkedRows.length === 0)
     {
+      await this.eventLogsService.createBusinessLog({log: { ...logCommonData, data8: '학원삭제실패' }});
       throw new NotFoundException('삭제할 데이터가 없습니다.');
     }
 
@@ -119,37 +127,21 @@ export class AcademyService
           checkedRows.map((row) => ({ heahedAcademyId: row.data1 })),
         )
         .execute();
-      const deletedCount = deleteResult.affected || 0
+      const deletedCount = deleteResult.affected || 0;
+
+      await queryRunner.commitTransaction();
       
       if(deletedCount > 0)
       {
-        await queryRunner.manager
-          .createQueryBuilder()
-          .insert()
-          .into('EventLogs')
-          .values(
-            checkedRows.map((row) => ({
-              hashedUserId: row.data2,
-              heahedAcademyId: row.data1,
-              eventType: 'academy-delete-success',
-              encryptedDeviceInfo: row.data3,
-              ivDeviceInfo: row.data4,
-              authTagDeviceInfo: row.data5,
-              encryptedIPAdress: row.data6,
-              ivIPAdress: row.data7,
-              authTagIPAdress: row.data8,
-              eventTime: new Date(),
-            })),
-          )
-          .execute();
+        await this.eventLogsService.createBusinessLog({log: { ...logCommonData, data8: '학원삭제성공' }});
       }
 
-      await queryRunner.commitTransaction();
       return { deletedCount };
     }
     catch(error)
     {
       await queryRunner.rollbackTransaction();
+      await this.eventLogsService.createBusinessLog({log: { ...logCommonData, data8: '학원삭제실패' }});
       throw new InternalServerErrorException('정보 삭제중 오류가 발생해서 삭제에 실패했습니다.');
     }
     finally
@@ -157,13 +149,24 @@ export class AcademyService
       await queryRunner.release();
     }
   }
-  
-  async updateNovation(updateAcademyDto: UpdateAcademyDto): Promise<{ updatedCount: number }>
+  //구독상태 업데이트
+  async updateNovation(updateAcademyDto: UpdateAcademyPaidCheckedDto): Promise<{ updatedCount: number }>
   {
     const { checkedRows } = updateAcademyDto;
     const currentEndOfMonth = endOfMonth(new Date());
+    const logCommonData = {
+      data1: checkedRows[0].data2,
+      data2: checkedRows[0].data3,
+      data3: checkedRows[0].data4,
+      data4: checkedRows[0].data5,
+      data5: checkedRows[0].data6,
+      data6: checkedRows[0].data7,
+      data7: checkedRows[0].data8,
+    }
 
-    if (!checkedRows || !Array.isArray(checkedRows) || checkedRows.length === 0) {
+    if (!checkedRows || !Array.isArray(checkedRows) || checkedRows.length === 0)
+    {
+      await this.eventLogsService.createBusinessLog({log: { ...logCommonData, data8: '학원상태변경실패' }});
       throw new NotFoundException('갱신할 데이터가 없습니다.');
     }
 
@@ -181,31 +184,44 @@ export class AcademyService
           paymentStatus: true,
           endMonth: currentEndOfMonth,
         })
-        .where('academyId IN (:...academyIds)', {
-          academyIds: checkedRows.map(row => row.data1),
-        })
-        .andWhere('academyName IN (:...academyNames)', {
-          academyNames: checkedRows.map(row => row.data2),
-        })        
+        .whereInIds(
+          checkedRows.map((row) => ({ heahedAcademyId: row.data1 })),
+        ) 
         .execute();
+      const updatedAcademyCount = updateAcademyResult.affected || 0;
 
       const updateUserResult = await queryRunner.manager
         .createQueryBuilder()
         .update(User)
         .set({ok: true})
-        .where('academyId IN (:...academyIds)', {
-          academyIds: checkedRows.map(row => row.data1),
-        })
+        .whereInIds(
+          checkedRows.map((row) => ({ hashedAcademyId: row.data1 }))
+        )
         .execute();
+      const updatedUserCount = updateUserResult.affected || 0;
 
       await queryRunner.commitTransaction();
+
+
+      if(updatedAcademyCount > 0)
+      {
+        await this.eventLogsService.createBusinessLog({log: { ...logCommonData, data8: '학원상태변경성공' }});
+      }
+      if(updatedUserCount > 0)
+      {
+        await this.eventLogsService.createBusinessLog({log: { ...logCommonData, data8: '회원상태변경성공' }});
+      }
+      else
+      {
+        await this.eventLogsService.createBusinessLog({log: { ...logCommonData, data8: '회원상태변경실패' }});
+      }
       
       return {updatedCount: updateAcademyResult.affected || 0};
     }
     catch(error)
     {
       await queryRunner.rollbackTransaction();
-
+      await this.eventLogsService.createBusinessLog({log: { ...logCommonData, data8: '학원상태변경실패' }});
       console.error('업데이트 중 오류 발생:', error);
       throw new InternalServerErrorException('데이터 갱신중 오류가 발생했습니다.');
     }
@@ -215,31 +231,51 @@ export class AcademyService
     }
   }
 
-  async registNewAcademy(addNewAcademyDto: AddNewAcademyDto): Promise<{createdCount: number, academies: Academy[]}>
+  async registNewAcademy(addNewAcademyDto: RegistAcademyCheckedDto): Promise<{createdCount: number, academies: Academy[]}>
   {
     const { data } = addNewAcademyDto;
     const currentEndOfMonth = endOfMonth(new Date());
     const today = new Date();
+    const logCommonData = {
+      data1: data[0].data2,
+      data2: data[0].data3,
+      data3: data[0].data4,
+      data4: data[0].data5,
+      data5: data[0].data6,
+      data6: data[0].data7,
+      data7: data[0].data8,
+    }
 
-    if (!data || !Array.isArray(data) || data.length === 0) {
+    if(!data || !Array.isArray(data) || data.length === 0)
+    {
+      await this.eventLogsService.createBusinessLog({log: { ...logCommonData, data8: '신규학원등록실패' }});
       throw new NotFoundException('갱신할 데이터가 없습니다.');
     }
+    for(const academyDto of data)
+    {
+      if(!academyDto['1'] || !academyDto['2'])
+      {
+        await this.eventLogsService.createBusinessLog({log: { ...logCommonData, data8: '신규학원등록실패' }});
+        throw new BadRequestException('academyId 또는 academyName이 누락되었습니다.');
+      }
+    }
+
     //Transaction 시작
-    const queryRunner = this.academyRepository.manager.connection.createQueryRunner();
+    const queryRunner = this.dataSource.createQueryRunner();
     await queryRunner.connect();
     await queryRunner.startTransaction();
 
     try
     {
       const academies = addNewAcademyDto.data.map((academyDto) => {
-        if (!academyDto['1'] || !academyDto['2'])
-        {
-          throw new InternalServerErrorException('academyId 또는 academyName이 누락되었습니다.');
-        }
+        const encryptedAcademyId = hashSHA256(academyDto['1']);
+        const encryptedAcademyName = encryptAES256GCM(academyDto['2']);
 
         const academy = new Academy();
-          academy.academyId = academyDto['1'];
-          academy.academyName = academyDto['2'];
+          academy.hashedAcademyId = encryptedAcademyId;
+          academy.encryptedAcademyName = Buffer.from(encryptedAcademyName.encryptedData, 'hex');
+          academy.ivAcademyName = Buffer.from(encryptedAcademyName.iv, 'hex');
+          academy.authTagAcademyName = Buffer.from(encryptedAcademyName.authTag, 'hex');
           academy.paymentStatus = true;
           academy.startMonth = today;
           academy.endMonth = currentEndOfMonth;
@@ -247,15 +283,16 @@ export class AcademyService
           return academy;
       });
       const createdAcademy = await queryRunner.manager.save(Academy, academies);
-
       await queryRunner.commitTransaction();
+
+      await this.eventLogsService.createBusinessLog({log: { ...logCommonData, data8: '신규학원등록성공' }});
 
       return {createdCount: createdAcademy.length || 0, academies: createdAcademy};
     }
     catch(error)
     {
       await queryRunner.rollbackTransaction();
-
+      await this.eventLogsService.createBusinessLog({log: { ...logCommonData, data8: '신규학원등록실패' }});
       console.error('업데이트 중 오류 발생:', error);
       throw new InternalServerErrorException('데이터 갱신중 오류가 발생했습니다.');
     }
@@ -275,7 +312,7 @@ export class AcademyService
       .getRawOne();
     const myAcademyId = teacher.AcademyID;
 
-    const myAcademy = await this.academyRepository.findOne({where : {academyId : myAcademyId}});
+    const myAcademy = await this.academyRepository.findOne({where : {hashedAcademyId : myAcademyId}});
     const myAcademyStudent = await this.dataSource
       .getRepository(User)
       .createQueryBuilder("user")
@@ -296,7 +333,7 @@ export class AcademyService
       .getRawOne();
     const myAcademyId = teacher.AcademyID;
 
-    const myAcademy = await this.academyRepository.findOne({where : {academyId : myAcademyId}});
+    const myAcademy = await this.academyRepository.findOne({where : {hashedAcademyId : myAcademyId}});
     const myAcademyStudent = await this.dataSource
       .getRepository(User)
       .createQueryBuilder("user")

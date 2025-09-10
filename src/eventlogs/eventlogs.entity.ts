@@ -10,9 +10,6 @@ export class EventLogs {
   @Column({ type: 'varchar', length: 255, nullable: false })
   hashedUserId: string;
 
-  @Column({ type: 'varchar', length: 255, nullable: false })
-  hashedAcademyId: string;
-
   @Column({ type: 'enum', enum: EventType, nullable: false })
   eventType: string;
 

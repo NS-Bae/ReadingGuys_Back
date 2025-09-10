@@ -1,9 +1,7 @@
 import { Controller, Post, Get, Param, Body, Put, Delete, Logger, Patch } from '@nestjs/common';
 import { AcademyService } from './academy.service';
 
-import { DeleteCheckedDto } from '../dto/deleteChecked.dto';
-import { UpdateAcademyDto } from '../dto/update-academy.dto';
-import { AddNewAcademyDto } from '../dto/create-academy.dto';
+import { DeleteAcademyCheckedDto, RegistAcademyCheckedDto, UpdateAcademyPaidCheckedDto } from '../dto/multiChecked.dto';
 
 @Controller('academy')
 export class AcademyController{
@@ -19,19 +17,19 @@ export class AcademyController{
   };
 
   @Delete('deletedata')
-  async deleteAcademy(@Body()deleteCheckedDto: DeleteCheckedDto)
+  async deleteAcademy(@Body()deleteCheckedDto: DeleteAcademyCheckedDto)
   {
     return this.academyService.deleteData(deleteCheckedDto);
   };
 
   @Patch('novation')
-  async updateAcademyNovation(@Body()updateAcademyDto: UpdateAcademyDto)
+  async updateAcademyNovation(@Body()updateAcademyDto: UpdateAcademyPaidCheckedDto)
   {
     return this.academyService.updateNovation(updateAcademyDto);
   }
 
   @Post('adddata')
-  async registNewAcademy(@Body() addNewAcademyDto: AddNewAcademyDto)
+  async registNewAcademy(@Body() addNewAcademyDto: RegistAcademyCheckedDto)
   {
     return this.academyService.registNewAcademy(addNewAcademyDto);
   }

@@ -5,7 +5,7 @@ import { User } from './users.entity';
 import { AddNewUserDto } from '../dto/createUser.dto';
 import { SearchUsersDto } from '../dto/searchUser.dto';
 import { UpdateUsersDto } from '../dto/updateUser.dto';
-import { DeleteCheckedDto } from '../dto/deleteChecked.dto';
+import { DeleteCheckedDto } from '../dto/multiChecked.dto';
 
 @Controller('users')
 export class UsersController {

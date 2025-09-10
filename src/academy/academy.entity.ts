@@ -7,9 +7,6 @@ export class Academy {
   @PrimaryColumn({ type: 'varchar', length: 255 })
   hashedAcademyId: string;
 
-  @Column({ type: 'varchar', length: 255, nullable: false })
-  academyId: string;
-
   @Column({ type: 'varbinary', length: 255, nullable: false })
   encryptedAcademyName: Buffer;
 
