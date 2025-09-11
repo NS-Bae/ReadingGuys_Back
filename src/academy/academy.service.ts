@@ -308,15 +308,15 @@ export class AcademyService
       .getRepository(User)
       .createQueryBuilder("user")
       .select(["user.academy"])
-      .where("user.id = :id", { id: userInfo })
+      .where("user.hashedUserId = :id", { id: userInfo })
       .getRawOne();
-    const myAcademyId = teacher.AcademyID;
+    const myAcademyId = teacher.hashedAcademyId;
 
     const myAcademy = await this.academyRepository.findOne({where : {hashedAcademyId : myAcademyId}});
     const myAcademyStudent = await this.dataSource
       .getRepository(User)
       .createQueryBuilder("user")
-      .where('user.academy = :academyId', { academyId: myAcademyId })
+      .where('user.academy = :hashedAcademyId', { hashedAcademyId: myAcademyId })
       .andWhere('user.userType = :userType', { userType: UserType.학생 })
       .getCount()
       
@@ -329,15 +329,15 @@ export class AcademyService
       .getRepository(User)
       .createQueryBuilder("user")
       .select(["user.academy"])
-      .where("user.id = :id", { id: userInfo })
+      .where("user.hashedUserId = :hashedUserId", { id: userInfo })
       .getRawOne();
-    const myAcademyId = teacher.AcademyID;
+    const myAcademyId = teacher.hashedAcademyID;
 
     const myAcademy = await this.academyRepository.findOne({where : {hashedAcademyId : myAcademyId}});
     const myAcademyStudent = await this.dataSource
       .getRepository(User)
       .createQueryBuilder("user")
-      .where('user.academy = :academyId', { academyId: myAcademyId })
+      .where('user.academy = :hashedAcademyId', { hashedAcademyId: myAcademyId })
       .getMany()
       
     return { myAcademyStudent };
