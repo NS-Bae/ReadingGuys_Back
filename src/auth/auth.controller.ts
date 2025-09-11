@@ -1,7 +1,8 @@
-import { Controller, Post, Body, Logger, Res } from '@nestjs/common';
-import { Response } from 'express';
+import { Controller, Post, Body, Logger, Res, UseGuards, Req } from '@nestjs/common';
+import { Request, Response } from 'express';
 import { AuthService } from './auth.service';
-import { LoginDto, UserInfoDto } from './dto/login.dto';
+import { LogDto, LoginDto, UserInfoDto } from './dto/login.dto';
+import { JWTAuthGuard } from './jwt-auth.guard';
 
 @Controller('auth')
 export class AuthController {
@@ -20,9 +21,11 @@ export class AuthController {
     await this.authService.managerLogin(loginDto, res);
   }
   //로그아웃
+  @UseGuards(JWTAuthGuard)
   @Post('logout')
-  async logout( @Res() res: Response)
+  async logout(@Req() req: Request, @Res() res: Response, @Body() data: LogDto)
   {
-    await this.authService.logoutAll(res);
+    const payload = req.user as any;
+    await this.authService.logoutAll(res, payload.hashedUserId, data);
   }
 }

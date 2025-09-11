@@ -30,6 +30,9 @@ export enum EventType {
   학원상태변경실패 = 'academy-paid-status-change-failed',
   신규학원등록성공 = 'regist-new-academy-success',
   신규학원등록실패 = 'regist-new-academy-failed',
+  관리자인증실패 = 'validate-failed',
+  관리자인증성공 = 'validate-success',
+  로그인실패 = 'log-in-failed',
 }
 
 export enum TermsTypes {
