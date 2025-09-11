@@ -47,15 +47,17 @@ export class AuthService {
 
     const payload =
     { 
-      id: user.id,
-      AcademyID: user.AcademyID,
+      hashedUserId: user.hashedUserId,
+      hashedAcademyID: user.hashedAcademyID,
       userType: user.userType,
       isItOk: user.ok
     };
     const refinedUserInfo =
     {
-      id: user.id,
-      AcademyID: user.AcademyID
+      hashedUserId: user.hashedUserId,
+      hashedAcademyID: user.hashedAcademyID,
+      userType: user.userType,
+      ok: user.ok,
     }
 
     const accessToken = this.jwtService.sign(payload);
@@ -97,9 +99,9 @@ export class AuthService {
     const user = await this.validateManager(loginDto);
 
     const payload = { 
-      id: user.id,
+      hashedUserId: user.hashedUserId,
+      hashedAcademyId: user.hashedAcademyId,
       userType: user.userType,
-      academyId: user.academyId,
       isItOk: user.ok,
       iat: Math.floor(Date.now() / 1000) };
     

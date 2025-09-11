@@ -15,9 +15,17 @@ export class UserInfoDto
 {
   @IsString()
   @IsNotEmpty()
-  id: string;
+  hashedUserId: string;
   
   @IsString()
   @IsNotEmpty()
-  AcademyID: string;
+  hashedAcademyID: string;
+
+  @IsString()
+  @IsNotEmpty()
+  userType: string;
+
+  @IsString()
+  @IsNotEmpty()
+  ok: string;
 }

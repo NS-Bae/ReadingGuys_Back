@@ -172,7 +172,6 @@ export class UsersService {
     }
   }
 
-
   findAll(): Promise<User[]> 
   {
     const users = this.usersRepository.find({ relations: ['academy'] });
@@ -180,9 +179,12 @@ export class UsersService {
     return users;
   }
 
-  async findOne(id: string): Promise<User> 
+  async findOne(hashedUserId: string): Promise<User> 
   {
-    const user = await this.usersRepository.findOne({ select : ['id', 'password', 'AcademyID', 'userType', 'ok'], where : { id } })
+    const user = await this.usersRepository.findOne({
+      select : ['hashedUserId', 'password', 'hashedAcademyId', 'userType', 'ok'],
+      where : { hashedUserId }
+    })
     return user;
   }
 
@@ -192,22 +194,22 @@ export class UsersService {
       .createQueryBuilder('user')
       .leftJoinAndSelect('user.academy', 'academy')
       .select([
-        "academy.academyId as academyId",
+        "academy.hashedAcademyId",
       ])
-      .where('user.id = :id', { id: id })
+      .where('user.hashedUserId = :id', { id: id })
       .getRawOne();
 
     return userAcademyId;
   }
 
-  async update(id: string, userData: Partial<User>): Promise<User>
+  /* async update(id: string, userData: Partial<User>): Promise<User>
   {
     await this.usersRepository.update(id, userData);
     return this.findOne(id);
-  }
+  } */
 
-  async remove(id: string): Promise<void>
+  async remove(hashedUserId: string): Promise<void>
   {
-    await this.usersRepository.delete(id);
+    await this.usersRepository.delete(hashedUserId);
   }
 }
