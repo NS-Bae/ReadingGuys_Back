@@ -4,10 +4,8 @@ import { In, Repository, DataSource } from 'typeorm';
 
 import { User } from './users.entity';
 import { Academy } from '../academy/academy.entity';
-import { AddNewUserDto } from '../dto/createUser.dto';
-import { SearchUsersDto } from '../dto/searchUser.dto';
-import { UpdateUsersDto } from '../dto/updateUser.dto';
-import { DeleteCheckedDto } from 'src/dto/deleteChecked.dto';
+
+import { AddNewUserDto, SearchUsersDto, UpdateUsersDto } from '../dto/user.dto';
 
 @Injectable()
 export class UsersService {
@@ -22,7 +20,6 @@ export class UsersService {
   { 
     const { data } = registUserDto;
 
-    console.log(data, 'a', registUserDto);
     if (!data || !Array.isArray(data) || data.length === 0) {
       throw new NotFoundException('등록할 데이터가 없습니다.');
     }
