@@ -6,6 +6,8 @@ import { User } from './users.entity';
 import { Academy } from '../academy/academy.entity';
 
 import { AddNewUserDto, SearchUsersDto, UpdateUsersDto } from '../dto/user.dto';
+import { EventLogsService } from "../eventlogs/eventlogs.service";
+import { encryptAES256GCM, hashSHA256 } from "src/utill/encryption.service";
 
 @Injectable()
 export class UsersService {
@@ -13,16 +15,32 @@ export class UsersService {
   constructor(
     @InjectRepository(User)
     private usersRepository: Repository<User>,
+    private readonly eventLogsService: EventLogsService,
     private dataSource: DataSource,
   ) {}
+
+  refineDto(data1: string, data2: string, data3: string)
+  {
+    return {
+      data1: data1,
+      data2: data2,
+      data3: data3,
+    };
+  }
 
   async registUser(registUserDto: AddNewUserDto): Promise<{addedCount: number}>
   { 
     const { data } = registUserDto;
 
-    if (!data || !Array.isArray(data) || data.length === 0) {
+    if(!data || !Array.isArray(data) || data.length === 0)
+    {
       throw new NotFoundException('등록할 데이터가 없습니다.');
     }
+
+    const device = data[0].info1;
+    const ia = data[0].info2;
+
+    const logCommonData = this.refineDto(info, hashedData);
 
     //Transaction 시작
     const queryRunner = this.usersRepository.manager.connection.createQueryRunner();
@@ -33,11 +51,15 @@ export class UsersService {
     {
       const newUser = await Promise.all(
         registUserDto.data.map(async (userDto) => {
-          if (!userDto['1'] || !userDto['2'] || !userDto['3'] || !userDto.academies || !userDto.types) {
+          if(!userDto['1'] || !userDto['2'] || !userDto['3'] || !userDto.academies || !userDto.types)
+          {
             throw new InternalServerErrorException('정보 입력이 누락 되었습니다.');
           }
+          const hashId = hashSHA256(userDto['1']);
+          const encryptUserId = encryptAES256GCM(userDto['1']);
+          const encryptUserName = encryptAES256GCM(userDto['3']);
             
-          const academy = await queryRunner.manager.findOne(Academy, { where: { academyId: userDto.academies } });
+          const academy = await queryRunner.manager.findOne(Academy, { where: { hashedAcademyId: userDto.academies } });
       
           if (!academy) {
             throw new InternalServerErrorException('해당 academyId가 존재하지 않습니다.');
@@ -46,9 +68,14 @@ export class UsersService {
           console.log(academy);
       
           const user = new User();
-          user.id = userDto['1'];
+          user.hashedUserId = hashId;
+          user.encryptedUserId = Buffer.from(encryptUserId.encryptedData, 'hex');
+          user.ivUserId = Buffer.from(encryptUserId.iv, 'hex');
+          user.authTagUserId = Buffer.from(encryptUserId.authTag, 'hex');
           user.password = userDto['2'];
-          user.userName = userDto['3'];
+          user.encryptedUserName = Buffer.from(encryptUserName.encryptedData, 'hex');
+          user.ivUserName = Buffer.from(encryptUserName.iv, 'hex');
+          user.authTagUserName = Buffer.from(encryptUserName.authTag, 'hex');
           user.academy = academy; // ✅ academy 객체를 직접 할당
           user.userType = userDto.types;
           user.ok = true;
@@ -60,6 +87,8 @@ export class UsersService {
       const registUser = await queryRunner.manager.save(User, newUser);
 
       await queryRunner.commitTransaction();
+
+      await this.eventLogsService.createBusinessLog({log: { ...logCommonData, data4: '신규학원등록성공' }});
 
       return { addedCount: registUser.length || 0 };
     }

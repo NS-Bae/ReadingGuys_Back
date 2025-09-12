@@ -20,6 +20,12 @@ class NewUserDto
 
   @IsEnum(UserType)
   types: UserType;
+  
+  @IsString()
+  info1: string; //DeviceInfo
+
+  @IsString()
+  info2: string; //IpAdress
 };
 
 class CheckedUserDto {
@@ -28,6 +34,12 @@ class CheckedUserDto {
 
   @IsString()
   data2: string;
+  
+  @IsString()
+  info1: string; //DeviceInfo
+
+  @IsString()
+  info2: string; //IpAdress
 };
 
 class UpdateUserDto
@@ -42,6 +54,12 @@ class UpdateUserDto
   @IsOptional()
   @IsString()
   pw?: string;
+  
+  @IsString()
+  info1: string; //DeviceInfo
+
+  @IsString()
+  info2: string; //IpAdress
 }
 
 export class AddNewUserDto
