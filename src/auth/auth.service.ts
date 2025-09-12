@@ -4,7 +4,9 @@ import { Injectable, Logger, UnauthorizedException } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { Response } from 'express';
 
-import { LogDto, LoginDto, UserInfoDto } from './dto/login.dto';
+import { LoginDto, UserInfoDto } from './dto/login.dto';
+import { LogDto } from '../dto/log.dto';
+
 import { UsersService } from '../users/users.service';
 import { EventLogsService } from '../eventlogs/eventlogs.service';
 
@@ -23,17 +25,13 @@ export class AuthService {
       data1: data,
       data2: row.data1,
       data3: row.data2,
-      data4: row.data3,
-      data5: row.data4,
-      data6: row.data5,
-      data7: row.data6,
     };
   }
   //일반(전체)유저 로그인
   async validateUser(loginDto: LoginDto): Promise<any>
   {
     const { info } = loginDto;
-    const hashedData = info.ip1;
+    const hashedData = info.ip1; //입력받은 id해쉬화
 
     const user = await this.usersService.findOne(hashedData);
     const logCommonData = this.refineDto(info, hashedData);
@@ -41,7 +39,7 @@ export class AuthService {
     if(!user)
     {
       await this.eventLogsService.createBusinessLog({
-        log: { ...logCommonData, data8: '로그인실패'}
+        log: { ...logCommonData, data4: '로그인실패'}
       });
       throw new UnauthorizedException('I유저 정보가 올바르지 않습니다.');
     }
@@ -51,14 +49,14 @@ export class AuthService {
     if(!pw_result)
     {
       await this.eventLogsService.createBusinessLog({
-        log: { ...logCommonData, data8: '로그인실패'}
+        log: { ...logCommonData, data4: '로그인실패'}
       });
       throw new UnauthorizedException('P유저정보가 올바르지 않습니다.');
     }
     if(!user.ok)
     {
       await this.eventLogsService.createBusinessLog({
-        log: { ...logCommonData, data8: '로그인실패'}
+        log: { ...logCommonData, data4: '로그인실패'}
       });
       throw new UnauthorizedException('계정이 승인되지 않았습니다. 소속 학원으로 문의바랍니다.');
     }
@@ -93,7 +91,7 @@ export class AuthService {
     const logCommonData = this.refineDto(info, user.hashedUserId);
 
     await this.eventLogsService.createBusinessLog({
-      log: { ...logCommonData, data8: '로그인'}
+      log: { ...logCommonData, data4: '로그인'}
     });
 
     return { accessToken, userInfo: refinedUserInfo };
@@ -110,7 +108,7 @@ export class AuthService {
     if(!user)
     {
       await this.eventLogsService.createBusinessLog({
-        log: { ...logCommonData, data8: '로그인실패'}
+        log: { ...logCommonData, data4: '로그인실패'}
       });
       throw new UnauthorizedException('유저 정보가 올바르지 않습니다.');
     }
@@ -120,26 +118,26 @@ export class AuthService {
     if(!pw_result)
     {
       await this.eventLogsService.createBusinessLog({
-        log: { ...logCommonData, data8: '로그인실패'}
+        log: { ...logCommonData, data4: '로그인실패'}
       });
       throw new UnauthorizedException('유저정보가 올바르지 않습니다.');
     }
     if(!user.ok)
     {
       await this.eventLogsService.createBusinessLog({
-        log: { ...logCommonData, data8: '로그인실패'}
+        log: { ...logCommonData, data4: '로그인실패'}
       });
       throw new UnauthorizedException('계정이 승인되지 않았습니다. 소속 학원으로 문의바랍니다.');
     }
     if(user.userType !== '관리자' && user.userType !== '교사')
     {
       await this.eventLogsService.createBusinessLog({
-        log: { ...logCommonData, data8: '관리자인증실패'}
+        log: { ...logCommonData, data4: '관리자인증실패'}
       });
       throw new UnauthorizedException('관리자용 로그인 페이지입니다. 일반 학생은 접근 할 수 없습니다.');
     }
     await this.eventLogsService.createBusinessLog({
-      log: { ...logCommonData, data8: '관리자인증성공'}
+      log: { ...logCommonData, data4: '관리자인증성공'}
     });
     
     const { password, ...result } = user;
@@ -162,7 +160,7 @@ export class AuthService {
     const logCommonData = this.refineDto(info, user.hashedUserId);
 
     await this.eventLogsService.createBusinessLog({
-      log: { ...logCommonData, data8: '로그인'}
+      log: { ...logCommonData, data4: '로그인'}
     });
 
     res.cookie('access_token', accessToken, {
@@ -180,7 +178,7 @@ export class AuthService {
     const logCommonData = this.refineDto(info, hashedData);
 
     await this.eventLogsService.createBusinessLog({
-      log: { ...logCommonData, data8: '로그아웃'}
+      log: { ...logCommonData, data4: '로그아웃'}
     });
     res.clearCookie("access_token");
     res.status(200).json({messgae: '로그아웃 성공'});

@@ -5,19 +5,11 @@ class logDto {
   @IsString()
   data1: string; //heshedUserId
   @IsString()
-  data2: Buffer; //encryptedDeviceInfo
+  data2: string; //DeviceInfo
   @IsString()
-  data3: Buffer; //ivDeviceInfo
+  data3: string; //IPAdress
   @IsString()
-  data4: Buffer; //authTagDeviceInfo
-  @IsString()
-  data5: Buffer; //encryptedIPAdress
-  @IsString()
-  data6: Buffer; //ivIPAdress
-  @IsString()
-  data7: Buffer; //authTagIPAdress
-  @IsString()
-  data8: string; //이벤트 종류
+  data4: string; //이벤트 종류
 };
 
 export class LogDto {

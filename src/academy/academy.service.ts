@@ -101,15 +101,11 @@ export class AcademyService
       data1: checkedRows[0].data2,
       data2: checkedRows[0].data3,
       data3: checkedRows[0].data4,
-      data4: checkedRows[0].data5,
-      data5: checkedRows[0].data6,
-      data6: checkedRows[0].data7,
-      data7: checkedRows[0].data8,
     }
 
     if(checkedRows.length === 0)
     {
-      await this.eventLogsService.createBusinessLog({log: { ...logCommonData, data8: '학원삭제실패' }});
+      await this.eventLogsService.createBusinessLog({log: { ...logCommonData, data4: '학원삭제실패' }});
       throw new NotFoundException('삭제할 데이터가 없습니다.');
     }
 
@@ -133,7 +129,7 @@ export class AcademyService
       
       if(deletedCount > 0)
       {
-        await this.eventLogsService.createBusinessLog({log: { ...logCommonData, data8: '학원삭제성공' }});
+        await this.eventLogsService.createBusinessLog({log: { ...logCommonData, data4: '학원삭제성공' }});
       }
 
       return { deletedCount };
@@ -141,7 +137,7 @@ export class AcademyService
     catch(error)
     {
       await queryRunner.rollbackTransaction();
-      await this.eventLogsService.createBusinessLog({log: { ...logCommonData, data8: '학원삭제실패' }});
+      await this.eventLogsService.createBusinessLog({log: { ...logCommonData, data4: '학원삭제실패' }});
       throw new InternalServerErrorException('정보 삭제중 오류가 발생해서 삭제에 실패했습니다.');
     }
     finally
@@ -158,15 +154,11 @@ export class AcademyService
       data1: checkedRows[0].data2,
       data2: checkedRows[0].data3,
       data3: checkedRows[0].data4,
-      data4: checkedRows[0].data5,
-      data5: checkedRows[0].data6,
-      data6: checkedRows[0].data7,
-      data7: checkedRows[0].data8,
     }
 
     if (!checkedRows || !Array.isArray(checkedRows) || checkedRows.length === 0)
     {
-      await this.eventLogsService.createBusinessLog({log: { ...logCommonData, data8: '학원상태변경실패' }});
+      await this.eventLogsService.createBusinessLog({log: { ...logCommonData, data4: '학원상태변경실패' }});
       throw new NotFoundException('갱신할 데이터가 없습니다.');
     }
 
@@ -205,15 +197,15 @@ export class AcademyService
 
       if(updatedAcademyCount > 0)
       {
-        await this.eventLogsService.createBusinessLog({log: { ...logCommonData, data8: '학원상태변경성공' }});
+        await this.eventLogsService.createBusinessLog({log: { ...logCommonData, data4: '학원상태변경성공' }});
       }
       if(updatedUserCount > 0)
       {
-        await this.eventLogsService.createBusinessLog({log: { ...logCommonData, data8: '회원상태변경성공' }});
+        await this.eventLogsService.createBusinessLog({log: { ...logCommonData, data4: '회원상태변경성공' }});
       }
       else
       {
-        await this.eventLogsService.createBusinessLog({log: { ...logCommonData, data8: '회원상태변경실패' }});
+        await this.eventLogsService.createBusinessLog({log: { ...logCommonData, data4: '회원상태변경실패' }});
       }
       
       return {updatedCount: updateAcademyResult.affected || 0};
@@ -221,7 +213,7 @@ export class AcademyService
     catch(error)
     {
       await queryRunner.rollbackTransaction();
-      await this.eventLogsService.createBusinessLog({log: { ...logCommonData, data8: '학원상태변경실패' }});
+      await this.eventLogsService.createBusinessLog({log: { ...logCommonData, data4: '학원상태변경실패' }});
       console.error('업데이트 중 오류 발생:', error);
       throw new InternalServerErrorException('데이터 갱신중 오류가 발생했습니다.');
     }
@@ -240,22 +232,18 @@ export class AcademyService
       data1: data[0].data2,
       data2: data[0].data3,
       data3: data[0].data4,
-      data4: data[0].data5,
-      data5: data[0].data6,
-      data6: data[0].data7,
-      data7: data[0].data8,
     }
 
     if(!data || !Array.isArray(data) || data.length === 0)
     {
-      await this.eventLogsService.createBusinessLog({log: { ...logCommonData, data8: '신규학원등록실패' }});
+      await this.eventLogsService.createBusinessLog({log: { ...logCommonData, data4: '신규학원등록실패' }});
       throw new NotFoundException('갱신할 데이터가 없습니다.');
     }
     for(const academyDto of data)
     {
       if(!academyDto['1'] || !academyDto['2'])
       {
-        await this.eventLogsService.createBusinessLog({log: { ...logCommonData, data8: '신규학원등록실패' }});
+        await this.eventLogsService.createBusinessLog({log: { ...logCommonData, data4: '신규학원등록실패' }});
         throw new BadRequestException('academyId 또는 academyName이 누락되었습니다.');
       }
     }
@@ -285,14 +273,14 @@ export class AcademyService
       const createdAcademy = await queryRunner.manager.save(Academy, academies);
       await queryRunner.commitTransaction();
 
-      await this.eventLogsService.createBusinessLog({log: { ...logCommonData, data8: '신규학원등록성공' }});
+      await this.eventLogsService.createBusinessLog({log: { ...logCommonData, data4: '신규학원등록성공' }});
 
       return {createdCount: createdAcademy.length || 0, academies: createdAcademy};
     }
     catch(error)
     {
       await queryRunner.rollbackTransaction();
-      await this.eventLogsService.createBusinessLog({log: { ...logCommonData, data8: '신규학원등록실패' }});
+      await this.eventLogsService.createBusinessLog({log: { ...logCommonData, data4: '신규학원등록실패' }});
       console.error('업데이트 중 오류 발생:', error);
       throw new InternalServerErrorException('데이터 갱신중 오류가 발생했습니다.');
     }

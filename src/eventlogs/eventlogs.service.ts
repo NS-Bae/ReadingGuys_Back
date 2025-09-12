@@ -3,6 +3,8 @@ import { InjectRepository } from "@nestjs/typeorm";
 import { DataSource, Repository } from "typeorm";
 
 import { EventLogs } from "./eventlogs.entity";
+import { encryptAES256GCM, hashSHA256 } from "src/utill/encryption.service";
+
 import { LogDto } from "../dto/log.dto";
 
 @Injectable()
@@ -20,6 +22,9 @@ export class EventLogsService
   {
     const { log } = logData;
 
+    const encryptedDevice = encryptAES256GCM(log.data2);
+    const encryptedIp = encryptAES256GCM(log.data3);
+
     const queryRunner = this.dataSource.createQueryRunner();
     await queryRunner.connect();
     await queryRunner.startTransaction();
@@ -32,13 +37,13 @@ export class EventLogsService
         .into('EventLogs')
         .values({
           hashedUserId: log.data1,
-          eventType: log.data8,
-          encryptedDeviceInfo: log.data2,
-          ivDeviceInfo: log.data3,
-          authTagDeviceInfo: log.data4,
-          encryptedIPAdress: log.data5,
-          ivIPAdress: log.data6,
-          authTagIPAdress: log.data7,
+          eventType: log.data4,
+          encryptedDeviceInfo: Buffer.from(encryptedDevice.encryptedData, 'hex'),
+          ivDeviceInfo: Buffer.from(encryptedDevice.iv, 'hex'),
+          authTagDeviceInfo: Buffer.from(encryptedDevice.authTag, 'hex'),
+          encryptedIPAdress: Buffer.from(encryptedIp.encryptedData, 'hex'),
+          ivIPAdress: Buffer.from(encryptedIp.iv, 'hex'),
+          authTagIPAdress: Buffer.from(encryptedIp.authTag, 'hex'),
           eventTime: new Date(),
         })
         .execute();

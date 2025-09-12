@@ -13,27 +13,11 @@ class loginDto
 
   @IsString()
   @IsNotEmpty()
-  data1: Buffer;
+  data1: string; //device
 
   @IsString()
   @IsNotEmpty()
-  data2: Buffer;
-
-  @IsString()
-  @IsNotEmpty()
-  data3: Buffer;
-
-  @IsString()
-  @IsNotEmpty()
-  data4: Buffer;
-
-  @IsString()
-  @IsNotEmpty()
-  data5: Buffer;
-
-  @IsString()
-  @IsNotEmpty()
-  data6: Buffer;
+  data2: string; //ip
 }
 
 class userInfoDto
@@ -55,33 +39,6 @@ class userInfoDto
   ok: string;
 }
 
-class logDto
-{
-  @IsString()
-  @IsNotEmpty()
-  data1: Buffer;
-
-  @IsString()
-  @IsNotEmpty()
-  data2: Buffer;
-
-  @IsString()
-  @IsNotEmpty()
-  data3: Buffer;
-
-  @IsString()
-  @IsNotEmpty()
-  data4: Buffer;
-
-  @IsString()
-  @IsNotEmpty()
-  data5: Buffer;
-
-  @IsString()
-  @IsNotEmpty()
-  data6: Buffer;
-}
-
 export class LoginDto
 {
   @Type(() => loginDto)
@@ -92,10 +49,4 @@ export class UserInfoDto
 {
   @Type(() => userInfoDto)
   info: userInfoDto;
-}
-
-export class LogDto
-{
-  @Type(() => logDto)
-  info: logDto;
 }

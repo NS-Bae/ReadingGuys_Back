@@ -3,21 +3,13 @@ import { Type } from 'class-transformer';
 
 class AcademyRowDto {
   @IsString()
-  data1: string; //heshedAcademyId 학원ID
+  data1: string; //heshedAcademyId or 학원ID
   @IsString()
-  data2: string; //heshedUserId    학원이름
+  data2: string; //heshedUserId    or 학원이름
   @IsString()
-  data3: Buffer; //encryptedDeviceInfo
+  data3: string; //DeviceInfo
   @IsString()
-  data4: Buffer; //ivDeviceInfo
-  @IsString()
-  data5: Buffer; //authTagDeviceInfo
-  @IsString()
-  data6: Buffer; //encryptedIPAdress
-  @IsString()
-  data7: Buffer; //ivIPAdress
-  @IsString()
-  data8: Buffer; //authTagIPAdress
+  data4: string; //IpAdress
 };
 
 export class DeleteAcademyCheckedDto {
