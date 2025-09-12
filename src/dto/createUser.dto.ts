@@ -1,6 +1,6 @@
 import { IsArray, IsEnum, IsString, MinLength, ValidateNested } from 'class-validator';
 import { Type } from 'class-transformer';
-import { UserType } from '../users/users.entity';
+import { UserType } from '../others/other.types';
 
 class NewUserDto
 {
