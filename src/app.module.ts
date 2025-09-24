@@ -12,6 +12,8 @@ import { AcademyModule } from './academy/academy.module';
 import { RecordsModule } from './record/records.module';
 import { TermsAgreementModule } from './agreement/agreement.module';
 import { EventLogsModule } from './eventlogs/eventlogs.module';
+import { JWTAuthGuard } from './auth/jwt-auth.guard';
+import { APP_GUARD } from '@nestjs/core';
 
 @Module({
   imports: [
@@ -44,6 +46,11 @@ import { EventLogsModule } from './eventlogs/eventlogs.module';
     ScheduleModule.forRoot(),
   ],
   controllers: [],
-  providers: [],
+  providers: [
+    {
+      provide: APP_GUARD,
+      useClass: JWTAuthGuard,
+    },
+  ],
 })
 export class AppModule {}

@@ -3,6 +3,7 @@ import { Controller, Post, Get, Param, Body, Put, Delete } from '@nestjs/common'
 
 import { UsersService } from './users.service';
 import { User } from './users.entity';
+import { Public } from '../auth/decorators/public.decorator';
 
 import { AddNewUserDto, SearchUsersDto, UpdateUsersDto } from '../dto/user.dto';
 

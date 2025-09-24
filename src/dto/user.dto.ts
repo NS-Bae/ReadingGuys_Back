@@ -6,20 +6,20 @@ class NewUserDto
 {
   @IsString()
   @MinLength(4)
-  data1: string;
+  data1: string;  //id
 
   @IsString()
   @MinLength(6)
-  data2: string;
+  data2: string;  //pw
 
   @IsString()
-  data3: string;
+  data3: string;  //이름
 
   @IsString()
-  academies: string;
+  academies: string;  //학원
 
   @IsEnum(UserType)
-  types: UserType;
+  types: UserType;    //타입
   
   @IsString()
   info1: string; //DeviceInfo
