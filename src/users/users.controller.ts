@@ -3,15 +3,16 @@ import { Controller, Post, Get, Param, Body, Put, Delete } from '@nestjs/common'
 
 import { UsersService } from './users.service';
 import { User } from './users.entity';
-import { Public } from '../auth/decorators/public.decorator';
 
-import { AddNewUserDto, SearchUsersDto, UpdateUsersDto } from '../dto/user.dto';
+import { CurrentUser } from 'src/auth/decorators/currentUser.decorator';
+
+import { AddNewUserDto, SearchUsersDto, UpdateUsersDto, DeleteUsersDto } from '../dto/user.dto';
 
 @Controller('users')
 export class UsersController {
   constructor(private readonly usersService: UsersService) {}
 
-  @Get()
+  @Get('/1')
   findAll(): Promise<User[]> {
     return this.usersService.findAll();
   }
@@ -21,32 +22,32 @@ export class UsersController {
     return this.usersService.findOne(id);
   }
 
-  @Put(':id')
+  /* @Put(':id')
   update(@Param('id') id: string, @Body() userData: Partial<User>): Promise<User> {
     return this.usersService.update(id, userData);
-  }
+  } */
 
   @Post('adddata')
-  async regist(@Body() registUserDto: AddNewUserDto)
+  async regist(@CurrentUser() payload: any, @Body() registUserDto: AddNewUserDto)
   {
-    return this.usersService.registUser(registUserDto);
+    return this.usersService.registUsers(payload.hashedUserId, registUserDto);
   }
 
   @Post('info')
-  async search(@Body() searchUsersDto: SearchUsersDto)
+  async search(@CurrentUser() payload: any, @Body() searchUsersDto: SearchUsersDto)
   {
-    return this.usersService.searchUsers(searchUsersDto);
+    return this.usersService.searchUsers(payload.hashedUserId, searchUsersDto);
   }
 
   @Post('changedata')
-  async updateInfo(@Body() updateUsersDto: UpdateUsersDto)
+  async updateInfo(@CurrentUser() payload: any, @Body() updateUsersDto: UpdateUsersDto)
   {
-    return this.usersService.updateUsers(updateUsersDto);
+    return this.usersService.updateUsers(payload.hashedUserId, updateUsersDto);
   }
 
   @Delete('deletedata')
-  async deleteUsers(@Body() deleteCheckedDto: DeleteCheckedDto)
+  async deleteUsers(@CurrentUser() payload: any, @Body() deleteCheckedDto: DeleteUsersDto)
   {
-    return this.usersService.deleteUsers(deleteCheckedDto);
+    return this.usersService.deleteUsers(payload.hashedUserId, deleteCheckedDto);
   }
 }

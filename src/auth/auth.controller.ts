@@ -7,6 +7,7 @@ import { LoginDto, UserInfoDto } from './dto/login.dto';
 import { LogDto } from '../dto/log.dto';
 
 import { Public } from './decorators/public.decorator';
+import { CurrentUser } from './decorators/currentUser.decorator';
 
 @Controller('auth')
 export class AuthController {
@@ -28,9 +29,8 @@ export class AuthController {
   }
   //로그아웃
   @Post('logout')
-  async logout(@Req() req: Request, @Res() res: Response, @Body() data: LogDto)
+  async logout(@CurrentUser() payload: any, @Res() res: Response, @Body() data: LogDto)
   {
-    const payload = req.user as any;
     await this.authService.logoutAll(res, payload.hashedUserId, data);
   }
 }

@@ -83,3 +83,10 @@ export class UpdateUsersDto {
   @Type(() => UpdateUserDto)
   data: UpdateUserDto[];
 };
+
+export class DeleteUsersDto {
+  @IsArray()
+  @ValidateNested({ each: true })
+  @Type(() => CheckedUserDto)
+  checkedRow: CheckedUserDto[];
+};

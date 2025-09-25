@@ -2,6 +2,7 @@ import { Controller, Post, Get, Param, Body, Put, Delete, Logger, Patch } from '
 import { AcademyService } from './academy.service';
 
 import { DeleteAcademyCheckedDto, RegistAcademyCheckedDto, UpdateAcademyPaidCheckedDto } from '../dto/multiChecked.dto';
+import { CurrentUser } from 'src/auth/decorators/currentUser.decorator';
 
 @Controller('academy')
 export class AcademyController{
@@ -35,15 +36,15 @@ export class AcademyController{
   }
 
   @Post('myinfo')
-  async getAcademyInfo(@Body("userInfo") userInfo: string)
+  async getAcademyInfo(@CurrentUser() payload: any)
   {
-    return this.academyService.getAcademyStudent(userInfo);
+    return this.academyService.getAcademyStudent(payload);
   }
 
   @Post('academystudentlist')
-  async getAcademyStudentInfo(@Body("userInfo") userInfo: string)
+  async getAcademyStudentInfo(@CurrentUser() payload: any)
   {
-    return this.academyService.getAcademyStudentList(userInfo);
+    return this.academyService.getAcademyStudentList(payload);
   }
   //test
   /* @Post('test-expired')

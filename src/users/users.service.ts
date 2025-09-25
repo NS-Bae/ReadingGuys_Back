@@ -5,7 +5,7 @@ import { In, Repository, DataSource } from 'typeorm';
 import { User } from './users.entity';
 import { Academy } from '../academy/academy.entity';
 
-import { AddNewUserDto, SearchUsersDto, UpdateUsersDto } from '../dto/user.dto';
+import { AddNewUserDto, SearchUsersDto, UpdateUsersDto, DeleteUsersDto } from '../dto/user.dto';
 import { EventLogsService } from "../eventlogs/eventlogs.service";
 import { encryptAES256GCM, hashSHA256 } from "src/utill/encryption.service";
 
@@ -28,7 +28,8 @@ export class UsersService {
     };
   }
 
-  async registUser(registUserDto: AddNewUserDto): Promise<{addedCount: number}>
+  //관리자 직접 등록용
+  async registUsers(hashedData: string, registUserDto: AddNewUserDto): Promise<{addedCount: number}>
   { 
     const { data } = registUserDto;
 
@@ -40,7 +41,7 @@ export class UsersService {
     const device = data[0].info1;
     const ia = data[0].info2;
 
-    const logCommonData = this.refineDto(info, hashedData);
+    const logCommonData = this.refineDto(hashedData, device, ia);
 
     //Transaction 시작
     const queryRunner = this.usersRepository.manager.connection.createQueryRunner();
@@ -105,7 +106,7 @@ export class UsersService {
     }
   }
 
-  async searchUsers(searchUsersDto: SearchUsersDto)
+  async searchUsers(hashedData: string, searchUsersDto: SearchUsersDto)
   {
     const{ checkedRow } = searchUsersDto;
 
@@ -126,7 +127,7 @@ export class UsersService {
     return users;
   }
 
-  async updateUsers(updateUsersDto: UpdateUsersDto): Promise<{updatedCount: number}>
+  async updateUsers(hashedData: string, updateUsersDto: UpdateUsersDto): Promise<{updatedCount: number}>
   {
     const { data } = updateUsersDto;
     let updatedCount = 0;
@@ -157,7 +158,7 @@ export class UsersService {
     return { updatedCount }
   }
 
-  async deleteUsers(deleteCheckedDto: DeleteCheckedDto): Promise<{deletedCount: number}>
+  async deleteUsers(hashedData: string, deleteCheckedDto: DeleteUsersDto): Promise<{deletedCount: number}>
   {
     const { checkedRows } = deleteCheckedDto;
 
@@ -201,7 +202,6 @@ export class UsersService {
   findAll(): Promise<User[]> 
   {
     const users = this.usersRepository.find({ relations: ['academy'] });
-    this.logger.debug('Fetched users:', users);
     return users;
   }
 
@@ -233,9 +233,9 @@ export class UsersService {
     await this.usersRepository.update(id, userData);
     return this.findOne(id);
   } */
-
+/* 
   async remove(hashedUserId: string): Promise<void>
   {
     await this.usersRepository.delete(hashedUserId);
-  }
+  } */
 }
