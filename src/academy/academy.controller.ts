@@ -2,7 +2,9 @@ import { Controller, Post, Get, Param, Body, Put, Delete, Logger, Patch } from '
 import { AcademyService } from './academy.service';
 
 import { DeleteAcademyCheckedDto, RegistAcademyCheckedDto, UpdateAcademyPaidCheckedDto } from '../dto/multiChecked.dto';
-import { CurrentUser } from 'src/auth/decorators/currentUser.decorator';
+import { RawLogInfoDto } from '../dto/log.dto';
+
+import { CurrentUser } from '../auth/decorators/currentUser.decorator';
 
 @Controller('academy')
 export class AcademyController{
@@ -13,26 +15,26 @@ export class AcademyController{
   @Get('totallist')
   async getAcademyList()
   {
-    const workbooks = await this.academyService.findAll();
-    return workbooks;
+    const academies = await this.academyService.findAll();
+    return academies;
   };
 
   @Delete('deletedata')
-  async deleteAcademy(@Body()deleteCheckedDto: DeleteAcademyCheckedDto)
+  async deleteAcademy(@CurrentUser('hashedUserId') hashedUserId: string, @Body() deleteCheckedDto: DeleteAcademyCheckedDto, rawInfo: RawLogInfoDto)
   {
-    return this.academyService.deleteData(deleteCheckedDto);
+    return this.academyService.deleteData(deleteCheckedDto, hashedUserId, rawInfo);
   };
 
   @Patch('novation')
-  async updateAcademyNovation(@Body()updateAcademyDto: UpdateAcademyPaidCheckedDto)
+  async updateAcademyNovation(@CurrentUser('hashedUserId') hashedUserId: string, @Body()updateAcademyDto: UpdateAcademyPaidCheckedDto, rawInfo: RawLogInfoDto)
   {
-    return this.academyService.updateNovation(updateAcademyDto);
+    return this.academyService.updateNovation(updateAcademyDto, hashedUserId, rawInfo);
   }
 
   @Post('adddata')
-  async registNewAcademy(@Body() addNewAcademyDto: RegistAcademyCheckedDto)
+  async registNewAcademy(@CurrentUser('hashedUserId') hashedUserId: string, @Body() addNewAcademyDto: RegistAcademyCheckedDto, rawInfo: RawLogInfoDto)
   {
-    return this.academyService.registNewAcademy(addNewAcademyDto);
+    return this.academyService.registNewAcademy(addNewAcademyDto, hashedUserId, rawInfo);
   }
 
   @Post('myinfo')

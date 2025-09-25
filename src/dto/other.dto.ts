@@ -4,5 +4,6 @@ export class JWTPayloadDto
 {
   hashedUserId: string;
   hashedAcademyId: string;
-  
+  userType: UserType;
+  ok: boolean;
 }

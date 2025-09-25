@@ -7,11 +7,14 @@ import { endOfMonth } from 'date-fns';
 import { Academy } from "./academy.entity";
 import { User } from "../users/users.entity";
 
-import { UserType } from "src/others/other.types";
+import { UserType } from "../others/other.types";
 
 import { DeleteAcademyCheckedDto, RegistAcademyCheckedDto, UpdateAcademyPaidCheckedDto } from '../dto/multiChecked.dto';
+import { RawLogInfoDto } from "../dto/log.dto";
+import { decryptionAcademyDto } from "../dto/return.dto";
+
 import { EventLogsService } from "../eventlogs/eventlogs.service";
-import { encryptAES256GCM, hashSHA256 } from "src/utill/encryption.service";
+import { decryptionAES256GCM, encryptAES256GCM, hashSHA256 } from "../utill/encryption.service";
 
 @Injectable()
 export class AcademyService
@@ -83,25 +86,32 @@ export class AcademyService
       await queryRunner.release();
     }
   }
-
-  async findAll(): Promise<Academy[]>
+  refineDto(hashedUserId: string, rawInfo)
   {
-    return await this.academyRepository.find();
+    return {
+      data1: hashedUserId,
+      data2: rawInfo.rawInfo.deviceInfo,
+      data3: rawInfo.rawInfo.IPA,
+    };
   }
 
-  async findOne(hashedAcademyId: string): Promise<Academy>
+  async findAll(): Promise<decryptionAcademyDto[]>
   {
-    return await this.academyRepository.findOne({where : {hashedAcademyId}});
+    const rawAcademies = await this.academyRepository.find();
+
+    return rawAcademies.map(rawAcademy => ({
+      hashedAcademyId: rawAcademy.hashedAcademyId,
+      academyName: decryptionAES256GCM(rawAcademy.encryptedAcademyName, rawAcademy.ivAcademyName, rawAcademy.authTagAcademyName),
+      paymentStatus: rawAcademy.paymentStatus,
+      startMonth: rawAcademy.startMonth,
+      endMonth:rawAcademy.endMonth,
+    }))
   }
 
-  async deleteData(deleteCheckedDto: DeleteAcademyCheckedDto): Promise<{ deletedCount: number }>
+  async deleteData(deleteCheckedDto: DeleteAcademyCheckedDto, hashedUserId: string, rawInfo: RawLogInfoDto): Promise<{ deletedCount: number }>
   {
     const { checkedRows } = deleteCheckedDto;
-    const logCommonData = {
-      data1: checkedRows[0].data2,
-      data2: checkedRows[0].data3,
-      data3: checkedRows[0].data4,
-    }
+    const logCommonData = this.refineDto(hashedUserId, rawInfo);
 
     if(checkedRows.length === 0)
     {
@@ -146,15 +156,11 @@ export class AcademyService
     }
   }
   //구독상태 업데이트
-  async updateNovation(updateAcademyDto: UpdateAcademyPaidCheckedDto): Promise<{ updatedCount: number }>
+  async updateNovation(updateAcademyDto: UpdateAcademyPaidCheckedDto, hashedUserId: string, rawInfo: RawLogInfoDto): Promise<{ updatedCount: number }>
   {
     const { checkedRows } = updateAcademyDto;
     const currentEndOfMonth = endOfMonth(new Date());
-    const logCommonData = {
-      data1: checkedRows[0].data2,
-      data2: checkedRows[0].data3,
-      data3: checkedRows[0].data4,
-    }
+    const logCommonData = this.refineDto(hashedUserId, rawInfo);
 
     if (!checkedRows || !Array.isArray(checkedRows) || checkedRows.length === 0)
     {
@@ -194,11 +200,11 @@ export class AcademyService
 
       await queryRunner.commitTransaction();
 
-
       if(updatedAcademyCount > 0)
       {
         await this.eventLogsService.createBusinessLog({log: { ...logCommonData, data4: '학원상태변경성공' }});
       }
+
       if(updatedUserCount > 0)
       {
         await this.eventLogsService.createBusinessLog({log: { ...logCommonData, data4: '회원상태변경성공' }});
@@ -222,17 +228,13 @@ export class AcademyService
       await queryRunner.release();
     }
   }
-
-  async registNewAcademy(addNewAcademyDto: RegistAcademyCheckedDto): Promise<{createdCount: number, academies: Academy[]}>
+  //신규 학원 등록(관리자 수기)
+  async registNewAcademy(addNewAcademyDto: RegistAcademyCheckedDto, hashedUserId: string, rawInfo: RawLogInfoDto): Promise<{createdCount: number, academies: Academy[]}>
   {
     const { data } = addNewAcademyDto;
     const currentEndOfMonth = endOfMonth(new Date());
     const today = new Date();
-    const logCommonData = {
-      data1: data[0].data2,
-      data2: data[0].data3,
-      data3: data[0].data4,
-    }
+    const logCommonData = this.refineDto(hashedUserId, rawInfo)
 
     if(!data || !Array.isArray(data) || data.length === 0)
     {
@@ -336,5 +338,9 @@ export class AcademyService
     console.log('🔵 테스트 실행: 구독 만료 학원 처리');
     await this.checkExpiredAcademies();
     console.log('🟢 테스트 완료');
+  } */
+ /* async findOne(hashedAcademyId: string): Promise<Academy>
+  {
+    return await this.academyRepository.findOne({where : { hashedAcademyId }});
   } */
 }

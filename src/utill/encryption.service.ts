@@ -28,16 +28,15 @@ export function hashSHA256(value: string)
 
 //복호화
 //AES-256-GCM
-export function decryptionAES256GCM(encryptedPart: string, ivPart: string, authTagPart: string)
+export function decryptionAES256GCM(encryptedPart: Buffer, ivPart: Buffer, authTagPart: Buffer): string
 {
-  const iv = Buffer.from(ivPart, 'hex');
-  const authTag = Buffer.from(authTagPart, 'hex');
+  const decipher = createDecipheriv('aes-256-gcm', key, ivPart);
+  decipher.setAuthTag(authTagPart);
 
-  const decipher = createDecipheriv('aes-256-gcm', key, iv);
-  decipher.setAuthTag(authTag);
+  const decryptedBuffer = Buffer.concat([
+    decipher.update(encryptedPart),
+    decipher.final(),
+  ]);
 
-  let decrypted = decipher.update(encryptedPart, 'hex', 'utf8');
-  decrypted += decipher.final('utf8');
-
-  return decrypted;
+  return decryptedBuffer.toString('utf8');
 }

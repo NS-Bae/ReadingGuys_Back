@@ -6,10 +6,6 @@ class AcademyRowDto {
   data1: string; //heshedAcademyId or 학원ID
   @IsString()
   data2: string; //heshedUserId    or 학원이름
-  @IsString()
-  data3: string; //DeviceInfo
-  @IsString()
-  data4: string; //IpAdress
 };
 
 export class DeleteAcademyCheckedDto {

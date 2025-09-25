@@ -12,7 +12,20 @@ class logDto {
   data4: string; //이벤트 종류
 };
 
+class rawLogInfoDto
+{
+  @IsString()
+  deviceInfo: string;
+  @IsString()
+  IPA: string;
+}
+
 export class LogDto {
   @Type(() => logDto)
   log: logDto;
+};
+
+export class RawLogInfoDto {
+  @Type(() => rawLogInfoDto)
+  rawInfo: rawLogInfoDto;
 };
