@@ -3,6 +3,7 @@ import { AcademyService } from './academy.service';
 
 import { DeleteAcademyCheckedDto, RegistAcademyCheckedDto, UpdateAcademyPaidCheckedDto } from '../dto/multiChecked.dto';
 import { RawLogInfoDto } from '../dto/log.dto';
+import { JWTPayloadDto } from '../dto/other.dto';
 
 import { CurrentUser } from '../auth/decorators/currentUser.decorator';
 
@@ -38,13 +39,13 @@ export class AcademyController{
   }
 
   @Post('myinfo')
-  async getAcademyInfo(@CurrentUser() payload: any)
+  async getAcademyInfo(@CurrentUser() payload: JWTPayloadDto)
   {
     return this.academyService.getAcademyStudent(payload);
   }
 
   @Post('academystudentlist')
-  async getAcademyStudentInfo(@CurrentUser() payload: any)
+  async getAcademyStudentInfo(@CurrentUser() payload: JWTPayloadDto)
   {
     return this.academyService.getAcademyStudentList(payload);
   }

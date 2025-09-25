@@ -12,9 +12,11 @@ import { UserType } from "../others/other.types";
 import { DeleteAcademyCheckedDto, RegistAcademyCheckedDto, UpdateAcademyPaidCheckedDto } from '../dto/multiChecked.dto';
 import { RawLogInfoDto } from "../dto/log.dto";
 import { decryptionAcademyDto } from "../dto/return.dto";
+import { JWTPayloadDto } from "../dto/other.dto";
 
 import { EventLogsService } from "../eventlogs/eventlogs.service";
-import { decryptionAES256GCM, encryptAES256GCM, hashSHA256 } from "../utill/encryption.service";
+import { encryptAES256GCM, hashSHA256 } from "../utill/encryption.service";
+import { refineAcademyData, refineUserData } from "../utill/refine.service";
 
 @Injectable()
 export class AcademyService
@@ -98,14 +100,9 @@ export class AcademyService
   async findAll(): Promise<decryptionAcademyDto[]>
   {
     const rawAcademies = await this.academyRepository.find();
+    const academyList = refineAcademyData(rawAcademies);
 
-    return rawAcademies.map(rawAcademy => ({
-      hashedAcademyId: rawAcademy.hashedAcademyId,
-      academyName: decryptionAES256GCM(rawAcademy.encryptedAcademyName, rawAcademy.ivAcademyName, rawAcademy.authTagAcademyName),
-      paymentStatus: rawAcademy.paymentStatus,
-      startMonth: rawAcademy.startMonth,
-      endMonth:rawAcademy.endMonth,
-    }))
+    return academyList;
   }
 
   async deleteData(deleteCheckedDto: DeleteAcademyCheckedDto, hashedUserId: string, rawInfo: RawLogInfoDto): Promise<{ deletedCount: number }>
@@ -291,44 +288,35 @@ export class AcademyService
       await queryRunner.release();
     }
   }
-  //소속학원생숫자 구하기
-  async getAcademyStudent(userInfo: string)
+  //소속학원생숫자와 내 학원 정보 보내기
+  async getAcademyStudent(userInfo: JWTPayloadDto)
   {
-    const teacher = await this.dataSource
-      .getRepository(User)
-      .createQueryBuilder("user")
-      .select(["user.academy"])
-      .where("user.hashedUserId = :id", { id: userInfo })
-      .getRawOne();
-    const myAcademyId = teacher.hashedAcademyId;
+    const hashedAcademy = userInfo.hashedAcademyId;
 
-    const myAcademy = await this.academyRepository.findOne({where : {hashedAcademyId : myAcademyId}});
+    const rawMyAcademy = await this.academyRepository.findOne({where : {hashedAcademyId : hashedAcademy}});
+    const myAcademy = refineAcademyData(rawMyAcademy);
+    
     const myAcademyStudent = await this.dataSource
       .getRepository(User)
       .createQueryBuilder("user")
-      .where('user.academy = :hashedAcademyId', { hashedAcademyId: myAcademyId })
+      .where('user.hashedAcademyId = :hashedAcademyId', { hashedAcademyId: hashedAcademy })
       .andWhere('user.userType = :userType', { userType: UserType.학생 })
       .getCount()
       
     return { myAcademy, myAcademyStudent };
   }
   //소속학원생리스트 구하기
-  async getAcademyStudentList(userInfo: string)
+  async getAcademyStudentList(userInfo: JWTPayloadDto)
   {
-    const teacher = await this.dataSource
-      .getRepository(User)
-      .createQueryBuilder("user")
-      .select(["user.academy"])
-      .where("user.hashedUserId = :hashedUserId", { id: userInfo })
-      .getRawOne();
-    const myAcademyId = teacher.hashedAcademyID;
+    const hashedAcademy = userInfo.hashedAcademyId;
 
-    const myAcademy = await this.academyRepository.findOne({where : {hashedAcademyId : myAcademyId}});
-    const myAcademyStudent = await this.dataSource
+    const rawMyAcademyStudent = await this.dataSource
       .getRepository(User)
       .createQueryBuilder("user")
-      .where('user.academy = :hashedAcademyId', { hashedAcademyId: myAcademyId })
-      .getMany()
+      .where('user.academy = :hashedAcademyId', { hashedAcademyId: hashedAcademy })
+      .getMany();
+
+    const myAcademyStudent = refineUserData(rawMyAcademyStudent);
       
     return { myAcademyStudent };
   }
