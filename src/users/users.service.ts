@@ -138,7 +138,7 @@ export class UsersService {
         'academy.authTagAcademyName',
       ])
       .where('user.hashedUserId IN (:...hashedUserIds)', { hashedUserIds })
-      .andWhere('user.hashedAcademyId IN (:...hashedAcademyIds', { hashedAcademyIds })
+      .andWhere('user.hashedAcademyId IN (:...hashedAcademyIds)', { hashedAcademyIds })
       .getMany();
 
     const refineRawUsers: beforeDecryptionUserDetailDto[] = rawUsers.map(item => ({
@@ -161,14 +161,25 @@ export class UsersService {
     return users;
   }
 
-  async updateUsers(hashedData: string, updateUsersDto: UpdateUsersDto): Promise<{updatedCount: number}>
+  async updateUsers(hashedData: string, updateUsersDto: UpdateUsersDto, rawInfo: RawLogInfoDto): Promise<{updatedCount: number}>
   {
     const { data } = updateUsersDto;
     let updatedCount = 0;
+
+    const device = rawInfo.rawInfo.deviceInfo;
+    const ia = rawInfo.rawInfo.IPA;
+
+    const logCommonData = this.refineDto(hashedData, device, ia);
+
+    if(data.length === 0)
+    {
+      await this.eventLogsService.createBusinessLog({log: { ...logCommonData, data4: '회원상태변경실패' }});
+      throw new NotFoundException('삭제할 데이터가 없습니다.');
+    }
     
     for (const userData of data) 
     {
-      const user = await this.usersRepository.findOne({ where: { id: userData.id}});
+      const user = await this.usersRepository.findOne({ where: { hashedUserId: userData.id}});
 
       if(user)
       {
@@ -182,22 +193,32 @@ export class UsersService {
         }
 
         await this.usersRepository.save(user);
+        await this.eventLogsService.createBusinessLog({log: { ...logCommonData, data4: '회원상태변경성공' }});
         updatedCount++;
       }
       else
       {
         console.log(`User with id ${userData.id} not found`);
+        await this.eventLogsService.createBusinessLog({log: { ...logCommonData, data4: '회원상태변경실패' }});
       }
     }
     return { updatedCount }
   }
 
-  async deleteUsers(hashedData: string, deleteCheckedDto: DeleteUsersDto): Promise<{deletedCount: number}>
+  async deleteUsers(hashedData: string, deleteCheckedDto: DeleteUsersDto, rawInfo: RawLogInfoDto): Promise<{deletedCount: number}>
   {
-    const { checkedRows } = deleteCheckedDto;
+    const { checkedRow } = deleteCheckedDto;
+    const device = rawInfo.rawInfo.deviceInfo;
+    const ia = rawInfo.rawInfo.IPA;
 
-    if(checkedRows.length === 0)
+    const hashedUserIds = checkedRow.map(row => row.data2);
+    const hashedAcademyIds = checkedRow.map(row => row.data1);
+
+    const logCommonData = this.refineDto(hashedData, device, ia);
+
+    if(checkedRow.length === 0)
     {
+      await this.eventLogsService.createBusinessLog({log: { ...logCommonData, data4: '회원삭제실패' }});
       throw new NotFoundException('삭제할 데이터가 없습니다.');
     }
 
@@ -208,22 +229,23 @@ export class UsersService {
 
     try
     {
-      await queryRunner.manager
+      const result = await queryRunner.manager
         .createQueryBuilder()
         .delete()
         .from(User)
-        .where('id IN (:...usersIds)', {
-          usersIds: checkedRows.map((item) => item.data2),
-        })
+        .where('hashedUserId IN (:...hashedUserIds)', { hashedUserIds })
+        .andWhere('hashedAcademyId IN (:...hashedAcademyIds)', { hashedAcademyIds })
         .execute();
 
       await queryRunner.commitTransaction();
-
-      return { deletedCount: checkedRows.length };
+      await this.eventLogsService.createBusinessLog({log: { ...logCommonData, data4: '회원삭제성공' }});
+      
+      return { deletedCount: result.affected ?? 0 };
     }
     catch(error)
     {
       await queryRunner.rollbackTransaction();
+      await this.eventLogsService.createBusinessLog({log: { ...logCommonData, data4: '회원삭제실패' }});
 
       throw new InternalServerErrorException('사용자 삭제중 문제가 발생했습니다.');
     }
@@ -275,20 +297,6 @@ export class UsersService {
     return users;
   }
 
-  async findAcademy(id: string)
-  {
-    const userAcademyId = await this.usersRepository
-      .createQueryBuilder('user')
-      .leftJoinAndSelect('user.academy', 'academy')
-      .select([
-        "academy.hashedAcademyId",
-      ])
-      .where('user.hashedUserId = :id', { id: id })
-      .getRawOne();
-
-    return userAcademyId;
-  }
-
   /*
   async update(id: string, userData: Partial<User>): Promise<User>
   {
@@ -308,6 +316,20 @@ export class UsersService {
       where : { hashedUserId }
     })
     return user;
+  }
+
+  async findAcademy(id: string)
+  {
+    const userAcademyId = await this.usersRepository
+      .createQueryBuilder('user')
+      .leftJoinAndSelect('user.academy', 'academy')
+      .select([
+        "academy.hashedAcademyId",
+      ])
+      .where('user.hashedUserId = :id', { id: id })
+      .getRawOne();
+
+    return userAcademyId;
   }
   */
 }

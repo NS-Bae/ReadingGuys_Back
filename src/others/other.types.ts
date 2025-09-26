@@ -35,6 +35,8 @@ export enum EventType {
   관리자인증실패 = 'validate-failed',
   관리자인증성공 = 'validate-success',
   로그인실패 = 'log-in-failed',
+  회원삭제성공 = 'user-delete-success',
+  회원삭제실패 = 'user-delete-failed',
 }
 
 export enum TermsTypes {

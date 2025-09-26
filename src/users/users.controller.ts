@@ -41,14 +41,14 @@ export class UsersController {
   }
 
   @Post('changedata')
-  async updateInfo(@CurrentUser() payload: any, @Body() updateUsersDto: UpdateUsersDto)
+  async updateInfo(@CurrentUser() payload: any, @Body() updateUsersDto: UpdateUsersDto, rawInfo: RawLogInfoDto)
   {
-    return this.usersService.updateUsers(payload.hashedUserId, updateUsersDto);
+    return this.usersService.updateUsers(payload.hashedUserId, updateUsersDto, rawInfo);
   }
 
   @Delete('deletedata')
-  async deleteUsers(@CurrentUser() payload: any, @Body() deleteCheckedDto: DeleteUsersDto)
+  async deleteUsers(@CurrentUser() payload: any, @Body() deleteCheckedDto: DeleteUsersDto, rawInfo: RawLogInfoDto)
   {
-    return this.usersService.deleteUsers(payload.hashedUserId, deleteCheckedDto);
+    return this.usersService.deleteUsers(payload.hashedUserId, deleteCheckedDto, rawInfo);
   }
 }
