@@ -4,39 +4,40 @@ import { Controller, Post, Get, Param, Body, Put, Delete } from '@nestjs/common'
 import { UsersService } from './users.service';
 import { User } from './users.entity';
 
-import { CurrentUser } from 'src/auth/decorators/currentUser.decorator';
+import { CurrentUser } from '../auth/decorators/currentUser.decorator';
 
 import { AddNewUserDto, SearchUsersDto, UpdateUsersDto, DeleteUsersDto } from '../dto/user.dto';
-
+import { RawLogInfoDto } from '../dto/log.dto';
+import { decryptionUserDetailDto } from '../dto/return.dto';
 @Controller('users')
 export class UsersController {
   constructor(private readonly usersService: UsersService) {}
 
   @Get('/1')
-  findAll(): Promise<User[]> {
+  async findAll(): Promise<decryptionUserDetailDto[]> {
     return this.usersService.findAll();
   }
-
+  /*
   @Get(':id')
   findOne(@Param('id') id: string): Promise<User> {
     return this.usersService.findOne(id);
   }
 
-  /* @Put(':id')
+  @Put(':id')
   update(@Param('id') id: string, @Body() userData: Partial<User>): Promise<User> {
     return this.usersService.update(id, userData);
   } */
 
   @Post('adddata')
-  async regist(@CurrentUser() payload: any, @Body() registUserDto: AddNewUserDto)
+  async regist(@CurrentUser('hashedUserId') hashedData: string, @Body() registUserDto: AddNewUserDto, rawInfo: RawLogInfoDto)
   {
-    return this.usersService.registUsers(payload.hashedUserId, registUserDto);
+    return this.usersService.registUsers(hashedData, registUserDto, rawInfo);
   }
 
   @Post('info')
-  async search(@CurrentUser() payload: any, @Body() searchUsersDto: SearchUsersDto)
+  async search(@Body() searchUsersDto: SearchUsersDto)
   {
-    return this.usersService.searchUsers(payload.hashedUserId, searchUsersDto);
+    return this.usersService.searchUsers(searchUsersDto);
   }
 
   @Post('changedata')

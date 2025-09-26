@@ -16,16 +16,10 @@ class NewUserDto
   data3: string;  //이름
 
   @IsString()
-  academies: string;  //학원
+  academies: string;  //해쉬된 학원id
 
   @IsEnum(UserType)
   types: UserType;    //타입
-  
-  @IsString()
-  info1: string; //DeviceInfo
-
-  @IsString()
-  info2: string; //IpAdress
 };
 
 class CheckedUserDto {
@@ -34,12 +28,6 @@ class CheckedUserDto {
 
   @IsString()
   data2: string;
-  
-  @IsString()
-  info1: string; //DeviceInfo
-
-  @IsString()
-  info2: string; //IpAdress
 };
 
 class UpdateUserDto
@@ -54,12 +42,6 @@ class UpdateUserDto
   @IsOptional()
   @IsString()
   pw?: string;
-  
-  @IsString()
-  info1: string; //DeviceInfo
-
-  @IsString()
-  info2: string; //IpAdress
 }
 
 export class AddNewUserDto

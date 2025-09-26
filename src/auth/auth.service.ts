@@ -5,7 +5,7 @@ import { JwtService } from '@nestjs/jwt';
 import { Response } from 'express';
 
 import { LoginDto, UserInfoDto } from './dto/login.dto';
-import { LogDto } from '../dto/log.dto';
+import { RawLogInfoDto } from '../dto/log.dto';
 
 import { UsersService } from '../users/users.service';
 import { EventLogsService } from '../eventlogs/eventlogs.service';
@@ -172,7 +172,7 @@ export class AuthService {
     return res.json({ message: '로그인 성공', accessToken });
   }
   //로그아웃
-  async logoutAll(res: Response, hashedData: string, data: LogDto)
+  async logoutAll(res: Response, hashedData: string, data: RawLogInfoDto)
   {
     const info = { data };
     const logCommonData = this.refineDto(info, hashedData);

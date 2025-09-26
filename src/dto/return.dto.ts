@@ -18,3 +18,31 @@ export class decryptionUserDto
   userType: UserType;
   ok: boolean;
 }
+
+export class beforeDecryptionUserDetailDto
+{
+  hashedUserId: string;
+  hashedAcademyId: string;
+  encryptedUserId: Buffer;
+  ivUserId: Buffer;
+  authTagUserId: Buffer;
+  encryptedUserName: Buffer;
+  ivUserName: Buffer;
+  authTagUserName: Buffer;
+  userType: UserType;
+  ok: boolean;
+  encryptedAcademyName: Buffer;
+  ivAcademyName: Buffer;
+  authTagAcademyName: Buffer;
+}
+
+export class decryptionUserDetailDto
+{
+  hashedUserId: string;
+  rawUserId: string;
+  rawUserName: string;
+  hashedAcademyId: string;
+  rawAcademyName: string;
+  userType: UserType;
+  ok: boolean;
+}

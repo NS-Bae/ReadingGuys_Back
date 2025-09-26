@@ -34,8 +34,12 @@ export class User {
 
   @BeforeInsert()
   @BeforeUpdate()
-  async hashPassword() {
-    this.password = await bcrypt.hash(this.password, 10);
+  async hashPassword()
+  {
+    if(!this.password.startsWith('$2b$'))
+    {
+      this.password = await bcrypt.hash(this.password, 10);
+    }
   }
 
   @Column({ type: 'varbinary', length: 255, nullable: false })

@@ -16,6 +16,7 @@ class rawLogInfoDto
 {
   @IsString()
   deviceInfo: string;
+  
   @IsString()
   IPA: string;
 }

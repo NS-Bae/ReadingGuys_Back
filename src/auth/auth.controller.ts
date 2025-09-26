@@ -4,7 +4,7 @@ import { Request, Response } from 'express';
 import { AuthService } from './auth.service';
 
 import { LoginDto, UserInfoDto } from './dto/login.dto';
-import { LogDto } from '../dto/log.dto';
+import { RawLogInfoDto } from '../dto/log.dto';
 
 import { Public } from './decorators/public.decorator';
 import { CurrentUser } from './decorators/currentUser.decorator';
@@ -29,8 +29,8 @@ export class AuthController {
   }
   //로그아웃
   @Post('logout')
-  async logout(@CurrentUser() payload: any, @Res() res: Response, @Body() data: LogDto)
+  async logout(@CurrentUser('hashedUserId') hashedData: string, @Res() res: Response, @Body() data: RawLogInfoDto)
   {
-    await this.authService.logoutAll(res, payload.hashedUserId, data);
+    await this.authService.logoutAll(res, hashedData, data);
   }
 }

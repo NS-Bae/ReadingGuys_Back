@@ -6,8 +6,12 @@ import { User } from './users.entity';
 import { Academy } from '../academy/academy.entity';
 
 import { AddNewUserDto, SearchUsersDto, UpdateUsersDto, DeleteUsersDto } from '../dto/user.dto';
+import { RawLogInfoDto } from '../dto/log.dto';
+import { beforeDecryptionUserDetailDto, decryptionUserDetailDto } from '../dto/return.dto';
+
 import { EventLogsService } from "../eventlogs/eventlogs.service";
-import { encryptAES256GCM, hashSHA256 } from "src/utill/encryption.service";
+import { encryptAES256GCM, hashSHA256 } from "../utill/encryption.service";
+import { refineUserDetailData } from '../utill/refine.service';
 
 @Injectable()
 export class UsersService {
@@ -29,19 +33,19 @@ export class UsersService {
   }
 
   //관리자 직접 등록용
-  async registUsers(hashedData: string, registUserDto: AddNewUserDto): Promise<{addedCount: number}>
+  async registUsers(hashedData: string, registUserDto: AddNewUserDto, rawInfo: RawLogInfoDto): Promise<{addedCount: number}>
   { 
     const { data } = registUserDto;
+    const device = rawInfo.rawInfo.deviceInfo;
+    const ia = rawInfo.rawInfo.IPA;
+
+    const logCommonData = this.refineDto(hashedData, device, ia);
 
     if(!data || !Array.isArray(data) || data.length === 0)
     {
+      await this.eventLogsService.createBusinessLog({log: { ...logCommonData, data4: '신규사용자등록실패' }});
       throw new NotFoundException('등록할 데이터가 없습니다.');
     }
-
-    const device = data[0].info1;
-    const ia = data[0].info2;
-
-    const logCommonData = this.refineDto(hashedData, device, ia);
 
     //Transaction 시작
     const queryRunner = this.usersRepository.manager.connection.createQueryRunner();
@@ -54,6 +58,7 @@ export class UsersService {
         registUserDto.data.map(async (userDto) => {
           if(!userDto['1'] || !userDto['2'] || !userDto['3'] || !userDto.academies || !userDto.types)
           {
+            await this.eventLogsService.createBusinessLog({log: { ...logCommonData, data4: '신규사용자등록실패' }});
             throw new InternalServerErrorException('정보 입력이 누락 되었습니다.');
           }
           const hashId = hashSHA256(userDto['1']);
@@ -62,11 +67,11 @@ export class UsersService {
             
           const academy = await queryRunner.manager.findOne(Academy, { where: { hashedAcademyId: userDto.academies } });
       
-          if (!academy) {
+          if(!academy)
+          {
+            await this.eventLogsService.createBusinessLog({log: { ...logCommonData, data4: '신규사용자등록실패' }});
             throw new InternalServerErrorException('해당 academyId가 존재하지 않습니다.');
           }
-
-          console.log(academy);
       
           const user = new User();
           user.hashedUserId = hashId;
@@ -89,7 +94,7 @@ export class UsersService {
 
       await queryRunner.commitTransaction();
 
-      await this.eventLogsService.createBusinessLog({log: { ...logCommonData, data4: '신규학원등록성공' }});
+      await this.eventLogsService.createBusinessLog({log: { ...logCommonData, data4: '신규사용자등록성공' }});
 
       return { addedCount: registUser.length || 0 };
     }
@@ -97,6 +102,7 @@ export class UsersService {
     {
       await queryRunner.rollbackTransaction();
 
+      await this.eventLogsService.createBusinessLog({log: { ...logCommonData, data4: '신규사용자등록실패' }});
       console.error('업데이트 중 오류 발생:', error);
       throw new InternalServerErrorException('데이터 갱신중 오류가 발생했습니다.'); 
     }
@@ -106,23 +112,51 @@ export class UsersService {
     }
   }
 
-  async searchUsers(hashedData: string, searchUsersDto: SearchUsersDto)
+  async searchUsers(searchUsersDto: SearchUsersDto)
   {
     const{ checkedRow } = searchUsersDto;
 
-    const userIds = checkedRow.map(row => row.data2);
-    const academyIds = checkedRow.map(row => row.data1);
+    const hashedUserIds = checkedRow.map(row => row.data2);
+    const hashedAcademyIds = checkedRow.map(row => row.data1);
 
-    const users = await this.usersRepository.find({
-      where: {
-        id: In(userIds),
-        academy: {
-          academyId: In(academyIds),
-        },
-      },
-      relations: ['academy'],
-      select: ['id', 'userName', 'academy', 'userType', 'ok'],
-    });
+    const rawUsers = await this.usersRepository
+      .createQueryBuilder('user')
+      .leftJoinAndSelect('user.academy', 'academy')
+      .select([
+        'user.hashedUserId',
+        'user.hashedAcademyId',
+        'user.encryptedUserId',
+        'user.ivUserId',
+        'user.authTagUserId',
+        'user.encryptedUserName',
+        'user.ivUserName',
+        'user.authTagUserName',
+        'user.userType',
+        'user.ok',
+        'academy.encryptedAcademyName',
+        'academy.ivAcademyName',
+        'academy.authTagAcademyName',
+      ])
+      .where('user.hashedUserId IN (:...hashedUserIds)', { hashedUserIds })
+      .andWhere('user.hashedAcademyId IN (:...hashedAcademyIds', { hashedAcademyIds })
+      .getMany();
+
+    const refineRawUsers: beforeDecryptionUserDetailDto[] = rawUsers.map(item => ({
+      hashedUserId: item.hashedUserId,
+      hashedAcademyId: item.hashedAcademyId,
+      encryptedUserId: item.encryptedUserId,
+      ivUserId: item.ivUserId,
+      authTagUserId: item.authTagUserId,
+      encryptedUserName: item.encryptedUserName,
+      ivUserName: item.ivUserName,
+      authTagUserName: item.authTagUserName,
+      userType: item.userType,
+      ok: item.ok,
+      encryptedAcademyName: item.academy.encryptedAcademyName,
+      ivAcademyName: item.academy.ivAcademyName,
+      authTagAcademyName: item.academy.authTagAcademyName,
+    }))
+    const users = refineUserDetailData(refineRawUsers);
 
     return users;
   }
@@ -199,19 +233,46 @@ export class UsersService {
     }
   }
 
-  findAll(): Promise<User[]> 
+  async findAll(): Promise<decryptionUserDetailDto[]> 
   {
-    const users = this.usersRepository.find({ relations: ['academy'] });
-    return users;
-  }
+    const rawUsers = await this.usersRepository
+      .createQueryBuilder('user')
+      .leftJoinAndSelect('user.academy', 'academy')
+      .select([
+        'user.hashedUserId',
+        'user.hashedAcademyId',
+        'user.encryptedUserId',
+        'user.ivUserId',
+        'user.authTagUserId',
+        'user.encryptedUserName',
+        'user.ivUserName',
+        'user.authTagUserName',
+        'user.userType',
+        'user.ok',
+        'academy.encryptedAcademyName',
+        'academy.ivAcademyName',
+        'academy.authTagAcademyName',
+      ])
+      .getMany();
 
-  async findOne(hashedUserId: string): Promise<User> 
-  {
-    const user = await this.usersRepository.findOne({
-      select : ['hashedUserId', 'password', 'hashedAcademyId', 'userType', 'ok'],
-      where : { hashedUserId }
-    })
-    return user;
+    const refineRawUsers: beforeDecryptionUserDetailDto[] = rawUsers.map(item => ({
+      hashedUserId: item.hashedUserId,
+      hashedAcademyId: item.hashedAcademyId,
+      encryptedUserId: item.encryptedUserId,
+      ivUserId: item.ivUserId,
+      authTagUserId: item.authTagUserId,
+      encryptedUserName: item.encryptedUserName,
+      ivUserName: item.ivUserName,
+      authTagUserName: item.authTagUserName,
+      userType: item.userType,
+      ok: item.ok,
+      encryptedAcademyName: item.academy.encryptedAcademyName,
+      ivAcademyName: item.academy.ivAcademyName,
+      authTagAcademyName: item.academy.authTagAcademyName,
+    }))
+    const users = refineUserDetailData(refineRawUsers);
+
+    return users;
   }
 
   async findAcademy(id: string)
@@ -228,14 +289,25 @@ export class UsersService {
     return userAcademyId;
   }
 
-  /* async update(id: string, userData: Partial<User>): Promise<User>
+  /*
+  async update(id: string, userData: Partial<User>): Promise<User>
   {
     await this.usersRepository.update(id, userData);
     return this.findOne(id);
-  } */
-/* 
+  } 
+
   async remove(hashedUserId: string): Promise<void>
   {
     await this.usersRepository.delete(hashedUserId);
-  } */
+  }
+
+  async findOne(hashedUserId: string): Promise<User> 
+  {
+    const user = await this.usersRepository.findOne({
+      select : ['hashedUserId', 'password', 'hashedAcademyId', 'userType', 'ok'],
+      where : { hashedUserId }
+    })
+    return user;
+  }
+  */
 }
