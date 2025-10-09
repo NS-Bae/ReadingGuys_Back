@@ -1,18 +1,21 @@
 import { Controller, Post, Body } from "@nestjs/common";
 
 import { RecordsService } from './records.service';
+
+import { CurrentUser } from '../auth/decorators/currentUser.decorator';
+
 import { SearchDetailRecordDto } from '../dto/searchOneWorkbookOneStudent.dto';
-import { ExamRecordDataDto } from "src/dto/createExamRecord.dto";
-import { ReadFileParamsDto } from "src/dto/reedFile.dto";
+import { ExamRecordDataDto } from "../dto/createExamRecord.dto";
+import { ReadFileParamsDto } from "../dto/readFile.dto";
 
 @Controller('records')
 export class RecordsController {
   constructor(private readonly recordsService: RecordsService) {}
 
   @Post('allstudent')
-  async getAllAcademyStudent(@Body() academyIds: { academyId: string } )
+  async getAllAcademyStudent(@CurrentUser('hashedAcademyId') hashedData: string)
   {
-    return this.recordsService.getAllAcademyStudentRecord(academyIds);
+    return this.recordsService.getAllAcademyStudentRecord(hashedData);
   }
 
   @Post('onestudent')

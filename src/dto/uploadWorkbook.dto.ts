@@ -1,6 +1,6 @@
 import { IsBoolean, IsDate, IsEnum, IsString } from "class-validator";
 import { Transform } from "class-transformer";
-import { Difficulty } from "../workbook/workbooks.entity";
+import { Difficulty } from '../others/other.types';
 import { Multer } from "multer";
 
 export class UploadBookDto

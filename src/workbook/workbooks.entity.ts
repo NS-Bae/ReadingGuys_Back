@@ -1,6 +1,6 @@
 import { Entity, Column, PrimaryColumn, OneToMany, PrimaryGeneratedColumn } from 'typeorm';
 import { Records } from '../record/records.entity';
-import { Difficulty } from 'src/others/other.types';
+import { Difficulty } from '../others/other.types';
 
 @Entity( 'Workbooks' )
 export class Workbook {

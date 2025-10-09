@@ -1,8 +1,7 @@
 // src/users/users.controller.ts
-import { Controller, Post, Get, Param, Body, Put, Delete } from '@nestjs/common';
+import { Controller, Post, Get, Body, Delete } from '@nestjs/common';
 
 import { UsersService } from './users.service';
-import { User } from './users.entity';
 
 import { CurrentUser } from '../auth/decorators/currentUser.decorator';
 

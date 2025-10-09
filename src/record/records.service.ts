@@ -1,14 +1,15 @@
 import { Injectable, InternalServerErrorException, Logger, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { In, Repository, DataSource } from 'typeorm';
+import { Repository, DataSource } from 'typeorm';
 
 import * as path from 'path';
 import * as fs from 'fs';
 
 import { Records } from './records.entity';
+
 import { SearchDetailRecordDto } from '../dto/searchOneWorkbookOneStudent.dto';
-import { ExamRecordDataDto } from 'src/dto/createExamRecord.dto';
-import { ReadFileParamsDto } from 'src/dto/reedFile.dto';
+import { ExamRecordDataDto } from '../dto/createExamRecord.dto';
+import { ReadFileParamsDto } from '../dto/readFile.dto';
 /* import { S3Service } from '../aws/s3.service';
  */
 @Injectable()
@@ -38,27 +39,30 @@ export class RecordsService {
     return `${year}-${month}-${day}T${hours}-${minutes}-${seconds}`;
   }
 
-  async getAllAcademyStudentRecord(a: { academyId: string })
+  async getAllAcademyStudentRecord(data: string)
   {
-    const aa = a.academyId;
     try
     {
-      const records = await this.recordsRepository
+      const rawRecords = await this.recordsRepository
         .createQueryBuilder('records')
         .leftJoinAndSelect('records.academy', 'academy')
         .leftJoinAndSelect('records.workbook', 'workbook')
         .leftJoinAndSelect('records.user', 'user')
         .select([
-          "user.id as UserID",
-          "user.userName as UserName",
+          "user.encryptedUserId as encryptedUserId",
+          "user.ivUserId as ivUserId",
+          "user.authTagUserId as authTagUserId",
+          "user.encryptedUserName as encryptedUserName",
+          "user.ivUserName as ivUserName",
+          "user.authTagUserName as authTagUserName",
           "workbook.workbookName as WorkbookName",
           "records.ExamDate as ExamDate",
           "records.ProgressRate as ProgressRate",
         ])
-        .where('academy.academyId = :academyId', { academyId: aa })
+        .where('academy.hashedAcademyId = :hashedAcademyId', { hashedAcademyId: data })
         .getRawMany();
 
-      return records.map(record => ({
+      return rawRecords.map(record => ({
         ...record,
         examDate: record.ExamDate.toLocaleDateString("ko-KR", {
           hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: true,

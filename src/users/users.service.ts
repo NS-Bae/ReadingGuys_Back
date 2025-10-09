@@ -32,6 +32,22 @@ export class UsersService {
     };
   }
 
+  async findOne(hashedUserId: string): Promise<User> 
+  {
+    try
+    {
+      const user = await this.usersRepository.findOne({
+        select : ['hashedUserId', 'password', 'hashedAcademyId', 'userType', 'ok'],
+        where : { hashedUserId }
+      })
+      return user;
+    }
+    catch(error)
+    {
+      throw new InternalServerErrorException('조회중 오류가 발생했습니다.');
+    }
+  }
+
   //관리자 직접 등록용
   async registUsers(hashedData: string, registUserDto: AddNewUserDto, rawInfo: RawLogInfoDto): Promise<{addedCount: number}>
   { 
@@ -119,46 +135,53 @@ export class UsersService {
     const hashedUserIds = checkedRow.map(row => row.data2);
     const hashedAcademyIds = checkedRow.map(row => row.data1);
 
-    const rawUsers = await this.usersRepository
-      .createQueryBuilder('user')
-      .leftJoinAndSelect('user.academy', 'academy')
-      .select([
-        'user.hashedUserId',
-        'user.hashedAcademyId',
-        'user.encryptedUserId',
-        'user.ivUserId',
-        'user.authTagUserId',
-        'user.encryptedUserName',
-        'user.ivUserName',
-        'user.authTagUserName',
-        'user.userType',
-        'user.ok',
-        'academy.encryptedAcademyName',
-        'academy.ivAcademyName',
-        'academy.authTagAcademyName',
-      ])
-      .where('user.hashedUserId IN (:...hashedUserIds)', { hashedUserIds })
-      .andWhere('user.hashedAcademyId IN (:...hashedAcademyIds)', { hashedAcademyIds })
-      .getMany();
+    try
+    {
+      const rawUsers = await this.usersRepository
+        .createQueryBuilder('user')
+        .leftJoinAndSelect('user.academy', 'academy')
+        .select([
+          'user.hashedUserId',
+          'user.hashedAcademyId',
+          'user.encryptedUserId',
+          'user.ivUserId',
+          'user.authTagUserId',
+          'user.encryptedUserName',
+          'user.ivUserName',
+          'user.authTagUserName',
+          'user.userType',
+          'user.ok',
+          'academy.encryptedAcademyName',
+          'academy.ivAcademyName',
+          'academy.authTagAcademyName',
+        ])
+        .where('user.hashedUserId IN (:...hashedUserIds)', { hashedUserIds })
+        .andWhere('user.hashedAcademyId IN (:...hashedAcademyIds)', { hashedAcademyIds })
+        .getMany();
 
-    const refineRawUsers: beforeDecryptionUserDetailDto[] = rawUsers.map(item => ({
-      hashedUserId: item.hashedUserId,
-      hashedAcademyId: item.hashedAcademyId,
-      encryptedUserId: item.encryptedUserId,
-      ivUserId: item.ivUserId,
-      authTagUserId: item.authTagUserId,
-      encryptedUserName: item.encryptedUserName,
-      ivUserName: item.ivUserName,
-      authTagUserName: item.authTagUserName,
-      userType: item.userType,
-      ok: item.ok,
-      encryptedAcademyName: item.academy.encryptedAcademyName,
-      ivAcademyName: item.academy.ivAcademyName,
-      authTagAcademyName: item.academy.authTagAcademyName,
-    }))
-    const users = refineUserDetailData(refineRawUsers);
+      const refineRawUsers: beforeDecryptionUserDetailDto[] = rawUsers.map(item => ({
+        hashedUserId: item.hashedUserId,
+        hashedAcademyId: item.hashedAcademyId,
+        encryptedUserId: item.encryptedUserId,
+        ivUserId: item.ivUserId,
+        authTagUserId: item.authTagUserId,
+        encryptedUserName: item.encryptedUserName,
+        ivUserName: item.ivUserName,
+        authTagUserName: item.authTagUserName,
+        userType: item.userType,
+        ok: item.ok,
+        encryptedAcademyName: item.academy.encryptedAcademyName,
+        ivAcademyName: item.academy.ivAcademyName,
+        authTagAcademyName: item.academy.authTagAcademyName,
+      }))
+      const users = refineUserDetailData(refineRawUsers);
 
-    return users;
+      return users;
+    }
+    catch(error)
+    {
+      throw new InternalServerErrorException('조회중에 오류가 발생했습니다.')
+    }
   }
 
   async updateUsers(hashedData: string, updateUsersDto: UpdateUsersDto, rawInfo: RawLogInfoDto): Promise<{updatedCount: number}>
@@ -257,44 +280,51 @@ export class UsersService {
 
   async findAll(): Promise<decryptionUserDetailDto[]> 
   {
-    const rawUsers = await this.usersRepository
-      .createQueryBuilder('user')
-      .leftJoinAndSelect('user.academy', 'academy')
-      .select([
-        'user.hashedUserId',
-        'user.hashedAcademyId',
-        'user.encryptedUserId',
-        'user.ivUserId',
-        'user.authTagUserId',
-        'user.encryptedUserName',
-        'user.ivUserName',
-        'user.authTagUserName',
-        'user.userType',
-        'user.ok',
-        'academy.encryptedAcademyName',
-        'academy.ivAcademyName',
-        'academy.authTagAcademyName',
-      ])
-      .getMany();
+    try
+    {
+      const rawUsers = await this.usersRepository
+        .createQueryBuilder('user')
+        .leftJoinAndSelect('user.academy', 'academy')
+        .select([
+          'user.hashedUserId',
+          'user.hashedAcademyId',
+          'user.encryptedUserId',
+          'user.ivUserId',
+          'user.authTagUserId',
+          'user.encryptedUserName',
+          'user.ivUserName',
+          'user.authTagUserName',
+          'user.userType',
+          'user.ok',
+          'academy.encryptedAcademyName',
+          'academy.ivAcademyName',
+          'academy.authTagAcademyName',
+        ])
+        .getMany();
 
-    const refineRawUsers: beforeDecryptionUserDetailDto[] = rawUsers.map(item => ({
-      hashedUserId: item.hashedUserId,
-      hashedAcademyId: item.hashedAcademyId,
-      encryptedUserId: item.encryptedUserId,
-      ivUserId: item.ivUserId,
-      authTagUserId: item.authTagUserId,
-      encryptedUserName: item.encryptedUserName,
-      ivUserName: item.ivUserName,
-      authTagUserName: item.authTagUserName,
-      userType: item.userType,
-      ok: item.ok,
-      encryptedAcademyName: item.academy.encryptedAcademyName,
-      ivAcademyName: item.academy.ivAcademyName,
-      authTagAcademyName: item.academy.authTagAcademyName,
-    }))
-    const users = refineUserDetailData(refineRawUsers);
+      const refineRawUsers: beforeDecryptionUserDetailDto[] = rawUsers.map(item => ({
+        hashedUserId: item.hashedUserId,
+        hashedAcademyId: item.hashedAcademyId,
+        encryptedUserId: item.encryptedUserId,
+        ivUserId: item.ivUserId,
+        authTagUserId: item.authTagUserId,
+        encryptedUserName: item.encryptedUserName,
+        ivUserName: item.ivUserName,
+        authTagUserName: item.authTagUserName,
+        userType: item.userType,
+        ok: item.ok,
+        encryptedAcademyName: item.academy.encryptedAcademyName,
+        ivAcademyName: item.academy.ivAcademyName,
+        authTagAcademyName: item.academy.authTagAcademyName,
+      }))
+      const users = refineUserDetailData(refineRawUsers);
 
-    return users;
+      return users;
+    }
+    catch(error)
+    {
+      throw new InternalServerErrorException('조회 중 오류가 발생했습니다.');
+    }
   }
 
   /*
@@ -307,15 +337,6 @@ export class UsersService {
   async remove(hashedUserId: string): Promise<void>
   {
     await this.usersRepository.delete(hashedUserId);
-  }
-
-  async findOne(hashedUserId: string): Promise<User> 
-  {
-    const user = await this.usersRepository.findOne({
-      select : ['hashedUserId', 'password', 'hashedAcademyId', 'userType', 'ok'],
-      where : { hashedUserId }
-    })
-    return user;
   }
 
   async findAcademy(id: string)
