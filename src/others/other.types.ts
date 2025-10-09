@@ -37,6 +37,7 @@ export enum EventType {
   로그인실패 = 'log-in-failed',
   회원삭제성공 = 'user-delete-success',
   회원삭제실패 = 'user-delete-failed',
+  결과저장실패 = 'save-record-failed',
 }
 
 export enum TermsTypes {

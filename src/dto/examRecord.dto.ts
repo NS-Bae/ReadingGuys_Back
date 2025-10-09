@@ -25,14 +25,6 @@ class AnswerItemDto {
 
 export class ExamRecordDataDto
 {
-  @IsString()
-  @IsNotEmpty()
-  academy: string;
-
-  @IsString()
-  @IsNotEmpty()
-  user: string;
-
   @IsNumber()
   @IsNotEmpty()
   workbook: number;

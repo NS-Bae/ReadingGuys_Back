@@ -7,12 +7,14 @@ import * as fs from 'fs';
 
 import { Records } from './records.entity';
 
-import { decryptionAES256GCM } from '../utill/encryption.service';
+import { decryptionAES256GCM, encryptAES256GCM } from '../utill/encryption.service';
+import { EventLogsService } from "../eventlogs/eventlogs.service";
 
 import { SearchDetailRecordDto } from '../dto/searchOneWorkbookOneStudent.dto';
-import { ExamRecordDataDto } from '../dto/createExamRecord.dto';
+import { ExamRecordDataDto } from '../dto/examRecord.dto';
 import { ReadFileParamsDto } from '../dto/readFile.dto';
-import { decryptionDto1 } from '../dto/return.dto';
+import { decryptionDto1, decryptionDto2 } from '../dto/return.dto';
+import { RawLogInfoDto } from '../dto/log.dto';
 /* import { S3Service } from '../aws/s3.service';
  */
 @Injectable()
@@ -21,6 +23,7 @@ export class RecordsService {
   constructor(
     @InjectRepository(Records)
     private recordsRepository: Repository<Records>,
+    private readonly eventLogsService: EventLogsService,
     private dataSource: DataSource,
 /*     private s3Service: S3Service,
  */  ) {}
@@ -40,6 +43,14 @@ export class RecordsService {
     const seconds = String(kst.getSeconds()).padStart(2, '0');
 
     return `${year}-${month}-${day}T${hours}-${minutes}-${seconds}`;
+  }
+  refineDto(data1: string, data2: string, data3: string)
+  {
+    return {
+      data1: data1,
+      data2: data2,
+      data3: data3,
+    };
   }
 
   async getAllAcademyStudentRecord(data: string)
@@ -66,7 +77,7 @@ export class RecordsService {
         .where('academy.hashedAcademyId = :hashedAcademyId', { hashedAcademyId: data })
         .getRawMany();
 
-      const refineTimeRawData =  rawRecords.map(item => ({
+      const refineTimeRawData = rawRecords.map(item => ({
         ...item,
         examDate: item.ExamDate.toLocaleDateString("ko-KR", {
           hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: true,
@@ -91,11 +102,11 @@ export class RecordsService {
     }
   }
 
-  async getOneAcademyStudentRecord(data: {data: string, academyId: string})
+  async getOneAcademyStudentRecord(hashedData, data: { data: string })
   {
     const splitData = data.data.split('_');
     const splitId = splitData[0];
-    const splitName = splitData[1];
+
     try
     {
       const records = await this.recordsRepository
@@ -104,23 +115,38 @@ export class RecordsService {
         .leftJoinAndSelect('records.workbook', 'workbook')
         .leftJoinAndSelect('records.user', 'user')
         .select([
-          "user.id as UserID",
-          "user.userName as UserName",
+          "user.hashedUserId as hashedUserId",
+          "user.encryptedUserId as encryptedUserId",
+          "user.ivUserId as ivUserId",
+          "user.authTagUserId as authTagUserId",
+          "user.encryptedUserName as encryptedUserName",
+          "user.ivUserName as ivUserName",
+          "user.authTagUserName as authTagUserName",
           "workbook.workbookName as WorkbookName",
           "records.ExamDate as ExamDate",
           "records.ProgressRate as ProgressRate",
         ])
-        .where('academy.academyId = :academyId', { academyId: data.academyId })
-        .andWhere('user.id = :id', {id: splitId})
-        .andWhere('user.userName = :userName', {userName: splitName})
+        .where('academy.academyId = :academyId', { academyId: hashedData })
+        .andWhere('user.hashedUserId = :hashedUserId', {hashedUserId: splitId})
         .getRawMany();
 
-      return records.map(record => ({
+      const refineTimeRawData =  records.map(record => ({
         ...record,
         examDate: record.ExamDate.toLocaleDateString("ko-KR", {
           hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: true,
         }),
       }));
+
+      const decryptionRefineData: decryptionDto1[] = refineTimeRawData.map(item => ({
+        hashedUserId: item.hashedUserId,
+        rawUserId: decryptionAES256GCM(item.encryptedUserId, item.ivUserId, item.authTagUserId),
+        rawUserName: decryptionAES256GCM(item.encryptedUserName, item.ivUserName, item.authTagUserName),
+        WorkbookName: item.WorkbookName,
+        ExamDate: item.examDate,
+        ProgressRate: item.ProgressRate,
+      }));
+
+      return decryptionRefineData;
     } 
     catch (error) 
     {
@@ -129,7 +155,7 @@ export class RecordsService {
     }
   }
 
-  async getOneStudentOneWorkbookRecord(searchDetailRecordDto: SearchDetailRecordDto)
+  async getOneStudentOneWorkbookRecord(hashedUserId: string, hashedAcademyId: string, searchDetailRecordDto: SearchDetailRecordDto)
   {
     const { refineData } = searchDetailRecordDto;
 
@@ -144,20 +170,30 @@ export class RecordsService {
           "workbook.workbookName as WorkbookName",
           "records.ExamDate as ExamDate",
           "records.ProgressRate as ProgressRate",
-          "records.RecordLink as RecordLink",
+          "records.encryptedRecordLink as encryptedRecordLink",
+          "records.ivRecordLink as ivRecordLink",
+          "records.authTagRecordLink as authTagRecordLink",
         ])
         .where('workbook.workbookId = :workbookId', { workbookId: refineData.workbookId })
-        .andWhere('academy.academyId = :academyId', { academyId: refineData.academyId })
-        .andWhere('user.id = :id', {id: refineData.userId})
-        .andWhere('user.userName = :userName', {userName: refineData.userName})
+        .andWhere('academy.hashedAcademyId = :hashedAcademyId', { hashedAcademyId })
+        .andWhere('user.hashedUserId = :hashedUserId', { hashedUserId })
         .getRawMany();
       
-      return records.map(record => ({
+      const refineTimeRawData = records.map(record => ({
         ...record,
         examDate: record.ExamDate.toLocaleDateString("ko-KR", {
           hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: true,
         }),
       }));
+
+      const decryptionRefineData: decryptionDto2[] = refineTimeRawData.map(item => ({
+        WorkbookName: item.WorkbookName,
+        ExamDate: item.examDate,
+        ProgressRate: item.ProgressRate,
+        RecordLink: decryptionAES256GCM(item.encryptedRecordLink, item.ivRecordLink, item.authTagRecordLink), 
+      }));
+
+      return decryptionRefineData;
     }
     catch(error)
     {
@@ -166,10 +202,14 @@ export class RecordsService {
     }
   }
 
-  async saveOneStudentExamRecord(examRecordData: ExamRecordDataDto)
+  async saveOneStudentExamRecord(hashedUser: string, hashedAcademy: string, examRecordData: ExamRecordDataDto, rawInfo: RawLogInfoDto)
   {
     const payload = examRecordData;
+    const device = rawInfo.rawInfo.deviceInfo;
+    const ia = rawInfo.rawInfo.IPA;
+
     const kstSubmitTime = this.toKST(examRecordData.submitDate);
+    const logCommonData = this.refineDto(hashedUser, device, ia);
 
     const baseDir = path.join(process.cwd(), 'records');
     if(!fs.existsSync(baseDir))
@@ -177,48 +217,55 @@ export class RecordsService {
       fs.mkdirSync(baseDir, { recursive: true });
     }
     //학원폴더 검증
-    const academyFolder = path.join(baseDir, payload.academy);
+    const academyFolder = path.join(baseDir, hashedAcademy);
     if(!fs.existsSync(academyFolder))
     {
       fs.mkdirSync(academyFolder, { recursive: true });
     }
     //사용자 폴더 검증
-    const userFolder = path.join(academyFolder, payload.user)
+    const userFolder = path.join(academyFolder, hashedUser)
     if(!fs.existsSync(userFolder))
     {
       fs.mkdirSync(userFolder, { recursive: true })
     }
     //파일 생성
-    const fileName = `${payload.academy}_${payload.user}_${kstSubmitTime}.json`;
+    const fileName = `${hashedAcademy}_${hashedUser}_${kstSubmitTime}.json`;
     const filePath = path.join(userFolder, fileName);
 
     //저장(LOCAL)
     fs.writeFileSync(filePath, JSON.stringify(examRecordData, null, 2));
     //저장(AWS)
-    /* const s3Key = `records/${payload.academy}/${payload.user}/${fileName}`;
+    /* const s3Key = `records/${hashedAcademy}/${hashedUser}/${fileName}`;
     const s3FileUrl = await this.s3Service.uploadRecordFile(filePath, s3Key); */
 
+    const encryptFilePath = encryptAES256GCM(filePath);
     //DB
     try
     {
       await this.dataSource.transaction(async (manager) => {
         const record = manager.create(Records, {
-          AcademyID: payload.academy,
-          UserID: payload.user,
+          hashedAcademyID: hashedAcademy,
+          hashedUserID: hashedUser,
           WorkbookID: payload.workbook,
           ExamDate: new Date(payload.submitDate),
           ProgressRate: Number(payload.correctCount.toFixed(2)),
-          RecordLink: filePath,//s3FileUrl
+          encryptedRecordLink: Buffer.from(encryptFilePath.encryptedData, 'hex'),//s3FileUrl
+          ivRecordLink: Buffer.from(encryptFilePath.iv, 'hex'),
+          authTagRecordLink: Buffer.from(encryptFilePath.authTag, 'hex'),
         });
 
-        await manager.save(record);
+        const saveRecord = await manager.save(record);
+
+        return saveRecord;
       });
+      await this.eventLogsService.createBusinessLog({log: { ...logCommonData, data4: '결과저장' }});
 
       return { message: '시험 결과 저장 완료', filePath };
     }
     catch(error)
     {
       console.error('DB 저장 오류:', error);
+      await this.eventLogsService.createBusinessLog({log: { ...logCommonData, data4: '결과저장실패' }});
       throw new InternalServerErrorException('시험 결과 DB 저장 실패');
     }
   }

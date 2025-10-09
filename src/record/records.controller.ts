@@ -5,8 +5,9 @@ import { RecordsService } from './records.service';
 import { CurrentUser } from '../auth/decorators/currentUser.decorator';
 
 import { SearchDetailRecordDto } from '../dto/searchOneWorkbookOneStudent.dto';
-import { ExamRecordDataDto } from "../dto/createExamRecord.dto";
+import { ExamRecordDataDto } from "../dto/examRecord.dto";
 import { ReadFileParamsDto } from "../dto/readFile.dto";
+import { RawLogInfoDto } from "../dto/log.dto";
 
 @Controller('records')
 export class RecordsController {
@@ -19,27 +20,26 @@ export class RecordsController {
   }
 
   @Post('onestudent')
-  async getOneAcademyStudent(@Body() data: {data: string, academyId: string } )
+  async getOneAcademyStudent(@CurrentUser('hashedAcademyId') hashedData: string, @Body() data: { data: string } )//전달받은 data = hasheduserid_userName
   {
-    return this.recordsService.getOneAcademyStudentRecord(data);
+    return this.recordsService.getOneAcademyStudentRecord(hashedData, data);
   }
 
   @Post('oneonerecord')
-  async getOneWorkbookExamRecord(@Body() searchDetailRecordDto: SearchDetailRecordDto)
+  async getOneWorkbookExamRecord(@CurrentUser([ 'hashedUserId', 'hashedAcademyID' ]) hashedData: any, @Body() searchDetailRecordDto: SearchDetailRecordDto)
   {
-    return this.recordsService.getOneStudentOneWorkbookRecord(searchDetailRecordDto);
+    return this.recordsService.getOneStudentOneWorkbookRecord(hashedData.hashedUserId, hashedData.hashedAcademyID, searchDetailRecordDto);
   }
 
   @Post('createrecord')
-  async createExamRecord(@Body() examRecordData: ExamRecordDataDto)
+  async createExamRecord(@CurrentUser([ 'hashedUserId', 'hashedAcademyID' ]) hashedData: any, @Body() examRecordData: ExamRecordDataDto, rawInfo: RawLogInfoDto)
   {
-    return this.recordsService.saveOneStudentExamRecord(examRecordData);
+    return this.recordsService.saveOneStudentExamRecord(hashedData.hashedUserId, hashedData.hashedAcademyID, examRecordData, rawInfo);
   }
 
   @Post('readFile')
   async readExamRecordFile(@Body() readFileParams: ReadFileParamsDto)
   {
-    const payload = readFileParams;
     return this.recordsService.readRecordJsonFile(readFileParams);
   }
 }

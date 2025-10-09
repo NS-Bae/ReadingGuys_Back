@@ -39,3 +39,11 @@ export class decryptionDto1
   ExamDate: Date;
   ProgressRate: number;
 }
+
+export class decryptionDto2
+{
+  WorkbookName: string;
+  ExamDate: Date;
+  ProgressRate: number;
+  RecordLink: string;
+}

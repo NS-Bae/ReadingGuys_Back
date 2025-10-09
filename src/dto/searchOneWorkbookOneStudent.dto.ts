@@ -5,12 +5,6 @@ import { IsString, ValidateNested } from "class-validator";
 class refineDataDto
 {
   @IsString()
-  academyId: string;
-  @IsString()
-  userId: string;
-  @IsString()
-  userName: string;
-  @IsString()
   workbookId: string;
 };
 
