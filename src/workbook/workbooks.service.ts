@@ -1,4 +1,4 @@
-import { Injectable, InternalServerErrorException, Logger, NotFoundException } from "@nestjs/common";
+import { BadRequestException, Injectable, InternalServerErrorException, Logger, NotFoundException } from "@nestjs/common";
 import { InjectRepository } from "@nestjs/typeorm";
 import { DataSource, MoreThan, Repository } from "typeorm";
 import * as path from "path";
@@ -7,14 +7,18 @@ import { Multer } from 'multer';
 import { join } from "path";
 
 /* import { AwsS3Service } from "./aws-s3.service"; */ // 서버 구동시 활성화
+import { unlink } from "fs/promises";
 
 import { Workbook } from './workbooks.entity';
 import { Academy } from '../academy/academy.entity';
 import { FirebaseService } from '../firebase/firebase.service';
 import { UploadBookDto } from '../dto/uploadWorkbook.dto';
-import { DeleteCheckedDto } from '../dto/multiChecked.dto';
+import { DeleteAcademyCheckedDto } from '../dto/multiChecked.dto';
 import { UpdateBookPaidDto } from '../dto/updateWorkbookPaid.dto';
-import { unlink } from "fs/promises";
+import { decryptionBookDto } from "../dto/return.dto";
+import { decryptionAES256GCM, encryptAES256GCM } from "../utill/encryption.service";
+import { EventLogsService } from "../eventlogs/eventlogs.service";
+import { RawLogInfoDto } from "../dto/log.dto";
 
 @Injectable()
 export class WorkbookService {
@@ -25,14 +29,23 @@ export class WorkbookService {
     @InjectRepository(Academy)
     private academyRepository: Repository<Academy>,
     private readonly firebaseService : FirebaseService,
+    private readonly eventLogsService: EventLogsService,
     private dataSource: DataSource,
     /* private readonly awsS3Service: AwsS3Service, */
   ) {}
-  //booklist update
-  async getWorkbookList(academyId: string)
+
+  refineDto(data1: string, data2: string, data3: string)
   {
-    this.logger.log(academyId);
-    const academy = await this.academyRepository.findOne({ where : { academyId : academyId } });
+    return {
+      data1: data1,
+      data2: data2,
+      data3: data3,
+    };
+  }
+  //booklist update
+  async getWorkbookList(data: string)
+  {
+    const academy = await this.academyRepository.findOne({ where : { hashedAcademyId : data } });
 
     if(!academy)
     {
@@ -41,33 +54,54 @@ export class WorkbookService {
 
     const startMonth = academy.startMonth;
 
-    const workbooks = await this.workbookRepository.find({
+    const rawWorkbooks = await this.workbookRepository.find({
       where : {
         releaseMonth : MoreThan(startMonth),
       }, 
-      select : ['workbookId', 'workbookName', 'Difficulty', 'storageLink'],
+      select : ['workbookId', 'workbookName', 'Difficulty', 'encryptedStorageLink', 'ivStorageLink', 'authTagStorageLink'],
     });
-    return workbooks;
+
+    const workBooks: decryptionBookDto[] = rawWorkbooks.map(item => ({
+      workbookId: item.workbookId,
+      workbookName: item.workbookName,
+      Difficulty: item.Difficulty,
+      storageLink: decryptionAES256GCM(item.encryptedStorageLink, item.ivStorageLink, item.authTagStorageLink),
+    }));
+
+    return workBooks;
   }
   //전체 문제집 불러오기
   async getWorkbookTotalList()
   {
-    const workbooks = await this.workbookRepository.find();
-    return workbooks;
+    const rawWorkbooks = await this.workbookRepository.find();
+    const workBooks: decryptionBookDto[] = rawWorkbooks.map(item => ({
+      workbookId: item.workbookId,
+      workbookName: item.workbookName,
+      Difficulty: item.Difficulty,
+      storageLink: decryptionAES256GCM(item.encryptedStorageLink, item.ivStorageLink, item.authTagStorageLink),
+    }));
+
+    return workBooks;
   }
   //workbookDownload
-  async getWorkbookDownload(storageLink: string): Promise<string>
+  async getWorkbookDownload(data: string, storageLink: string, rawInfo: RawLogInfoDto): Promise<string>
   {
-    this.logger.log(storageLink);
     const filePath = path.resolve(storageLink);
+    const device = rawInfo.rawInfo.deviceInfo;
+    const ia = rawInfo.rawInfo.IPA;
 
-    if (!fs.existsSync(filePath)) {
+    const logCommonData = this.refineDto(data, device, ia);
+
+    if(!fs.existsSync(filePath))
+    {
+      await this.eventLogsService.createBusinessLog({ log : {...logCommonData, data4: '교재다운로드실패'} });
       throw new Error('파일을 찾을 수 없습니다.');
     }
+    await this.eventLogsService.createBusinessLog({ log : {...logCommonData, data4: '교재다운로드'} });
 
     return filePath;
   }
-  //workbook upload push alert
+  //workbook upload push alert NOTYET
   async uploadWorkbook(data)
   {
     console.log('문제집 업로드 완료');
@@ -79,41 +113,65 @@ export class WorkbookService {
     await this.firebaseService.sendNotification(userDeviceToken, title, body);
   }
   //workbook upload(local)(aws s3대응준비 완료)
-  async uploadWorkbookFile(data: UploadBookDto, file: Multer.file)
+  async uploadWorkbookFile(data: UploadBookDto, hashedData: string, rawInfo: RawLogInfoDto, file: Multer.file)
   {
-    const queryRunner = this.dataSource
-
     let filePath = null;
+    const device = rawInfo.rawInfo.deviceInfo;
+    const ia = rawInfo.rawInfo.IPA;
 
-    if(file)
+    const logCommonData = this.refineDto(hashedData, device, ia);
+
+    if(!file)
     {
-      filePath = join(process.cwd(), "uploads", file.filename);
-      console.log("📂 파일 저장 경로:", filePath);
+      throw new BadRequestException('업로드할 파일이 없습니다.');
     }
+
+    filePath = join(process.cwd(), "uploads", file.filename);
+    console.log("📂 파일 저장 경로:", filePath);
+
     /* // AWS S3로 업로드
     let fileUrl = null;
     if (file) {
       fileUrl = await this.awsS3Service.uploadFile(file);
       console.log("📂 AWS S3 업로드 완료:", fileUrl);
     } */
+    try
+    {
+      const encryptedData = encryptAES256GCM(filePath);
+      const newWorkbook = {
+        releaseMonth: data.releaseMonth,
+        workbookName: data.workbookName,
+        Difficulty: data.Difficulty,
+        isPaid: data.isPaid,
+        encryptedStorageLink: Buffer.from(encryptedData.encryptedData, 'hex'),
+        ivStorageLink: Buffer.from(encryptedData.iv, 'hex'),
+        authTagStorageLink: Buffer.from(encryptedData.authTag, 'hex'),
+      }
+      const savedWorkbook = await this.workbookRepository.save(newWorkbook);
 
-    const newWorkbook = {
-      releaseMonth: data.releaseMonth,
-      workbookName: data.workbookName,
-      Difficulty: data.Difficulty,
-      isPaid: data.isPaid,
-      storageLink: filePath,
+      await this.eventLogsService.createBusinessLog({ log : {...logCommonData, data4: '교재업로드'} });
+
+      return { message: "업로드 완료!", data: savedWorkbook };
     }
-
-    const savedWorkbook = await this.workbookRepository.save(newWorkbook);
-    return { message: "업로드 완료!", data: savedWorkbook };
+    catch(error)
+    {
+      console.error('업로드 중 오류 발생:', error);
+      await this.eventLogsService.createBusinessLog({log: { ...logCommonData, data4: '교재업로드실패' }});
+      throw new InternalServerErrorException('데이터 갱신중 오류가 발생했습니다.'); 
+    }
   }
   //문제집 삭제
-  async deleteWorkbook(deleteCheckedDto: DeleteCheckedDto): Promise<{ deletedCount: number }>
+  async deleteWorkbook(deleteCheckedDto: DeleteAcademyCheckedDto, data: string, rawInfo: RawLogInfoDto): Promise<{ deletedCount: number }>
   {
     const { checkedRows } = deleteCheckedDto;
+    const device = rawInfo.rawInfo.deviceInfo;
+    const ia = rawInfo.rawInfo.IPA;
+
+    const logCommonData = this.refineDto(data, device, ia);
+
     if(checkedRows.length === 0)
     {
+      await this.eventLogsService.createBusinessLog({log: { ...logCommonData, data4: '교재삭제실패' }});
       throw new NotFoundException('삭제할 데이터가 없습니다.');
     }
     //Transaction 시작
@@ -122,35 +180,40 @@ export class WorkbookService {
     await queryRunner.startTransaction();
     try
     {
-      const workbooks = await queryRunner.manager
+      const rawWorkbooks = await queryRunner.manager
         .createQueryBuilder(Workbook, 'workbook')
-        .select('workbook.storageLink')
+        .select(['workbook.encryptedStorageLink', 'workbook.ivStorageLink', 'workbook.authTagStorageLink'])
         .where('workbook.workbookId IN (:...workbookIds)', {
           workbookIds: checkedRows.map((item) => item.data1),
         })
         .getMany();
 
-      if(workbooks.length === 0)
+      if(rawWorkbooks.length === 0)
       {
         console.log('삭제할 문제집이 없습니다.');
         await queryRunner.rollbackTransaction();
-        return ;
+        await this.eventLogsService.createBusinessLog({log: { ...logCommonData, data4: '교재삭제실패' }});
+        return { deletedCount: 0 };
       }
+
+      const WorkBooks = rawWorkbooks.map(item => ({
+        storageLink: decryptionAES256GCM(item.encryptedStorageLink, item.ivStorageLink, item.authTagStorageLink),
+      }));
       //저장소에 저장된 workbook삭제
-      for(const workbook of workbooks)
+      for(const workbook of WorkBooks)
       {
         //로컬(배포시 삭제)
         if(workbook.storageLink)
         {
           try
           {
-            const filePath = join(workbook.storageLink);
-            await unlink(filePath);
+            await unlink(workbook.storageLink);
             console.log(`📂 로컬 파일 삭제 완료`);
           }
           catch(error)
           {
             console.error(`❌ 로컬 파일 삭제 실패: ${workbook.storageLink}`, error);
+            await this.eventLogsService.createBusinessLog({log: { ...logCommonData, data4: '교재삭제실패' }});
             throw new InternalServerErrorException('파일 삭제 중 오류 발생');
           }
         }
@@ -169,7 +232,7 @@ export class WorkbookService {
           }
         } */
       }
-      await queryRunner.manager
+      const deleteResult = await queryRunner.manager
         .createQueryBuilder()
         .delete()
         .from(Workbook)
@@ -180,11 +243,14 @@ export class WorkbookService {
 
       await queryRunner.commitTransaction();
 
-      return { deletedCount: workbooks.length };
+      await this.eventLogsService.createBusinessLog({log: { ...logCommonData, data4: '교재삭제성공' }});
+
+      return { deletedCount: deleteResult.affected || 0 };
     }
     catch(error)
     {
       await queryRunner.rollbackTransaction();
+      await this.eventLogsService.createBusinessLog({log: { ...logCommonData, data4: '교재삭제실패' }});
       throw new InternalServerErrorException('데이터 삭제중 오류가 발생했습니다.');
     }
     finally
@@ -193,13 +259,18 @@ export class WorkbookService {
     }
   }
   //문제집 무료공개 전환
-  async updateWorkbookPaid(updateCheckedRow: UpdateBookPaidDto): Promise<{updatedCount: number}>
+  async updateWorkbookPaid(updateCheckedRow: UpdateBookPaidDto, hashedData: string, rawInfo: RawLogInfoDto): Promise<{updatedCount: number}>
   {
     const { data } = updateCheckedRow;
+    const device = rawInfo.rawInfo.deviceInfo;
+    const ia = rawInfo.rawInfo.IPA;
     let updatedCount = 0
+
+    const logCommonData = this.refineDto(hashedData, device, ia);
     
     if(data.length === 0)
     {
+      await this.eventLogsService.createBusinessLog({log: { ...logCommonData, data4: '교재상태변경실패' }});
       throw new NotFoundException('변경할 데이터가 없습니다.');
     }
 
@@ -214,6 +285,8 @@ export class WorkbookService {
         }
       })
     );
+
+    await this.eventLogsService.createBusinessLog({log: { ...logCommonData, data4: '교재상태변경성공' }});
 
     return { updatedCount }
   }

@@ -3,7 +3,7 @@ import { Type } from 'class-transformer';
 
 class DataDto {
   @IsString()
-  data1: string;
+  data1: number;
   @IsString()
   data2: string;
 };

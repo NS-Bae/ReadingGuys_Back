@@ -38,6 +38,12 @@ export enum EventType {
   회원삭제성공 = 'user-delete-success',
   회원삭제실패 = 'user-delete-failed',
   결과저장실패 = 'save-record-failed',
+  교재다운로드실패 = 'download-book-failed',
+  교재업로드실패 = 'upload-book-failed',
+  교재삭제성공 = 'delete-book-success',
+  교재삭제실패 = 'delete-book-failed',
+  교재상태변경성공 = 'book-paid-status-change-success',
+  교재상태변경실패 = 'book-paid-status-change-failed',
 }
 
 export enum TermsTypes {

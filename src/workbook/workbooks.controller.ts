@@ -4,10 +4,13 @@ import { FileInterceptor } from '@nestjs/platform-express';
 import { Multer } from "multer";
 
 import { WorkbookService } from './workbooks.service';
-import { UploadBookDto } from '../dto/uploadWorkbook.dto';
-import { DeleteCheckedDto } from '../dto/multiChecked.dto';
-import { UpdateBookPaidDto } from 'src/dto/updateWorkbookPaid.dto';
 import { multerConfig } from './multer.config';
+
+import { UploadBookDto } from '../dto/uploadWorkbook.dto';
+import { DeleteAcademyCheckedDto } from '../dto/multiChecked.dto';
+import { UpdateBookPaidDto } from '../dto/updateWorkbookPaid.dto';
+import { CurrentUser } from '../auth/decorators/currentUser.decorator';
+import { RawLogInfoDto } from '../dto/log.dto';
 
 @Controller('workbook')
 export class WorkbookController {
@@ -16,9 +19,9 @@ export class WorkbookController {
   ) {}
 
   @Get('list')
-  async getWorkbookList(@Query('academyId') academyId: string)
+  async getWorkbookList(@CurrentUser('hashedAcademyId') data: string)
   {
-    const workbooks = await this.workbookService.getWorkbookList(academyId);
+    const workbooks = await this.workbookService.getWorkbookList(data);
     return workbooks;
   }
 
@@ -30,13 +33,13 @@ export class WorkbookController {
   }
   //책 다운로드
   @Post('download')
-  async downloadBook(@Body('storageLink') storageLink : string, @Res() res : Response)
+  async downloadBook(@CurrentUser('hashedUserId') data: string, @Body('storageLink') storageLink : string, rawInfo: RawLogInfoDto, @Res() res : Response)
   {
     if(!storageLink)
     {
       throw new BadRequestException('파일경로가 존재하지 않습니다.');
     }
-    const bookLink = await this.workbookService.getWorkbookDownload(storageLink);
+    const bookLink = await this.workbookService.getWorkbookDownload(data, storageLink, rawInfo);
     res.setHeader('Content-Disposition', `attachment; filename="${encodeURIComponent(storageLink)}"`);
     res.sendFile(bookLink);
   }
@@ -44,22 +47,23 @@ export class WorkbookController {
   @Post('adddata')
   @UseInterceptors(FileInterceptor("file", multerConfig))
   async uploadBook(
-    @Body() data: UploadBookDto,
+    @CurrentUser('hashedUserId') hashedData: string, 
+    @Body() data: UploadBookDto, rawInfo: RawLogInfoDto,
     @UploadedFile() file: Multer.File
     )
   {
-    return this.workbookService.uploadWorkbookFile(data, file);
+    return this.workbookService.uploadWorkbookFile(data, hashedData, rawInfo, file);
   }
   //책 삭제
   @Delete('deletedata')
-  async deleteBook(@Body() deleteCheckedRow: DeleteCheckedDto)
+  async deleteBook(@CurrentUser('hashedUserId') data: string, @Body() deleteCheckedRow: DeleteAcademyCheckedDto, rawInfo: RawLogInfoDto)
   {
-    return this.workbookService.deleteWorkbook(deleteCheckedRow);
+    return this.workbookService.deleteWorkbook(deleteCheckedRow, data, rawInfo);
   }
   //책 변경(유료 무료)
   @Post('changedata')
-  async updateBook(@Body() updateCheckedRow: UpdateBookPaidDto)
+  async updateBook(@CurrentUser('hashedUserId') data: string, @Body() updateCheckedRow: UpdateBookPaidDto, rawInfo: RawLogInfoDto)
   {
-    return this.workbookService.updateWorkbookPaid(updateCheckedRow);
+    return this.workbookService.updateWorkbookPaid(updateCheckedRow, data, rawInfo);
   }
 }
