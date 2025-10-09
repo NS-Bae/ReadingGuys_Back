@@ -7,9 +7,12 @@ import * as fs from 'fs';
 
 import { Records } from './records.entity';
 
+import { decryptionAES256GCM } from '../utill/encryption.service';
+
 import { SearchDetailRecordDto } from '../dto/searchOneWorkbookOneStudent.dto';
 import { ExamRecordDataDto } from '../dto/createExamRecord.dto';
 import { ReadFileParamsDto } from '../dto/readFile.dto';
+import { decryptionDto1 } from '../dto/return.dto';
 /* import { S3Service } from '../aws/s3.service';
  */
 @Injectable()
@@ -49,6 +52,7 @@ export class RecordsService {
         .leftJoinAndSelect('records.workbook', 'workbook')
         .leftJoinAndSelect('records.user', 'user')
         .select([
+          "user.hashedUserId as hashedUserId",
           "user.encryptedUserId as encryptedUserId",
           "user.ivUserId as ivUserId",
           "user.authTagUserId as authTagUserId",
@@ -62,12 +66,23 @@ export class RecordsService {
         .where('academy.hashedAcademyId = :hashedAcademyId', { hashedAcademyId: data })
         .getRawMany();
 
-      return rawRecords.map(record => ({
-        ...record,
-        examDate: record.ExamDate.toLocaleDateString("ko-KR", {
+      const refineTimeRawData =  rawRecords.map(item => ({
+        ...item,
+        examDate: item.ExamDate.toLocaleDateString("ko-KR", {
           hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: true,
         }),
       }));
+
+      const decryptionRefineData: decryptionDto1[] = refineTimeRawData.map(item => ({
+        hashedUserId: item.hashedUserId,
+        rawUserId: decryptionAES256GCM(item.encryptedUserId, item.ivUserId, item.authTagUserId),
+        rawUserName: decryptionAES256GCM(item.encryptedUserName, item.ivUserName, item.authTagUserName),
+        WorkbookName: item.WorkbookName,
+        ExamDate: item.examDate,
+        ProgressRate: item.ProgressRate,
+      }));
+
+      return decryptionRefineData;
     } 
     catch (error) 
     {

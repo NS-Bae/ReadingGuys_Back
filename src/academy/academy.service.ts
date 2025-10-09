@@ -11,12 +11,11 @@ import { UserType } from "../others/other.types";
 
 import { DeleteAcademyCheckedDto, RegistAcademyCheckedDto, UpdateAcademyPaidCheckedDto } from '../dto/multiChecked.dto';
 import { RawLogInfoDto } from "../dto/log.dto";
-import { decryptionAcademyDto } from "../dto/return.dto";
+import { decryptionAcademyDto, decryptionUserDto } from "../dto/return.dto";
 import { JWTPayloadDto } from "../dto/other.dto";
 
 import { EventLogsService } from "../eventlogs/eventlogs.service";
-import { encryptAES256GCM, hashSHA256 } from "../utill/encryption.service";
-import { refineAcademyData, refineUserData } from "../utill/refine.service";
+import { decryptionAES256GCM, encryptAES256GCM, hashSHA256 } from "../utill/encryption.service";
 
 @Injectable()
 export class AcademyService
@@ -100,7 +99,13 @@ export class AcademyService
   async findAll(): Promise<decryptionAcademyDto[]>
   {
     const rawAcademies = await this.academyRepository.find();
-    const academyList = refineAcademyData(rawAcademies);
+    const academyList: decryptionAcademyDto[] = rawAcademies.map(item => ({
+      hashedAcademyId: item.hashedAcademyId,
+      academyName: decryptionAES256GCM(item.encryptedAcademyName, item.ivAcademyName, item.authTagAcademyName),
+      paymentStatus: item.paymentStatus,
+      startMonth: item.startMonth,
+      endMonth: item.endMonth,
+    }));
 
     return academyList;
   }
@@ -294,7 +299,13 @@ export class AcademyService
     const hashedAcademy = userInfo.hashedAcademyId;
 
     const rawMyAcademy = await this.academyRepository.findOne({where : {hashedAcademyId : hashedAcademy}});
-    const myAcademy = refineAcademyData(rawMyAcademy);
+    const myAcademy: decryptionAcademyDto = {
+      hashedAcademyId: rawMyAcademy.hashedAcademyId,
+      academyName: decryptionAES256GCM(rawMyAcademy.encryptedAcademyName, rawMyAcademy.ivAcademyName, rawMyAcademy.authTagAcademyName),
+      paymentStatus: rawMyAcademy.paymentStatus,
+      startMonth: rawMyAcademy.startMonth,
+      endMonth: rawMyAcademy.endMonth,
+    }
     
     const myAcademyStudent = await this.dataSource
       .getRepository(User)
@@ -316,7 +327,14 @@ export class AcademyService
       .where('user.academy = :hashedAcademyId', { hashedAcademyId: hashedAcademy })
       .getMany();
 
-    const myAcademyStudent = refineUserData(rawMyAcademyStudent);
+    const myAcademyStudent: decryptionUserDto[] = rawMyAcademyStudent.map(item => ({
+      hashedUserId: item.hashedUserId,
+      rawUserId: decryptionAES256GCM(item.encryptedUserId, item.ivUserId, item.authTagUserId),
+      rawUserName: decryptionAES256GCM(item.encryptedUserName, item.ivUserName, item.authTagUserName),
+      hashedAcademyId: item.hashedAcademyId,
+      userType: item.userType,
+      ok: item.ok,
+    }));
       
     return { myAcademyStudent };
   }

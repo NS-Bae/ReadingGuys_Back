@@ -7,11 +7,10 @@ import { Academy } from '../academy/academy.entity';
 
 import { AddNewUserDto, SearchUsersDto, UpdateUsersDto, DeleteUsersDto } from '../dto/user.dto';
 import { RawLogInfoDto } from '../dto/log.dto';
-import { beforeDecryptionUserDetailDto, decryptionUserDetailDto } from '../dto/return.dto';
+import { decryptionUserDetailDto } from '../dto/return.dto';
 
 import { EventLogsService } from "../eventlogs/eventlogs.service";
-import { encryptAES256GCM, hashSHA256 } from "../utill/encryption.service";
-import { refineUserDetailData } from '../utill/refine.service';
+import { decryptionAES256GCM, encryptAES256GCM, hashSHA256 } from "../utill/encryption.service";
 
 @Injectable()
 export class UsersService {
@@ -159,24 +158,17 @@ export class UsersService {
         .andWhere('user.hashedAcademyId IN (:...hashedAcademyIds)', { hashedAcademyIds })
         .getMany();
 
-      const refineRawUsers: beforeDecryptionUserDetailDto[] = rawUsers.map(item => ({
+      const refineUsers: decryptionUserDetailDto[] = rawUsers.map(item => ({
         hashedUserId: item.hashedUserId,
+        rawUserId: decryptionAES256GCM(item.encryptedUserId, item.ivUserId, item.authTagUserId),
+        rawUserName: decryptionAES256GCM(item.encryptedUserName, item.ivUserName, item.authTagUserName),
         hashedAcademyId: item.hashedAcademyId,
-        encryptedUserId: item.encryptedUserId,
-        ivUserId: item.ivUserId,
-        authTagUserId: item.authTagUserId,
-        encryptedUserName: item.encryptedUserName,
-        ivUserName: item.ivUserName,
-        authTagUserName: item.authTagUserName,
+        rawAcademyName: decryptionAES256GCM(item.academy.encryptedAcademyName, item.academy.ivAcademyName, item.academy.authTagAcademyName),
         userType: item.userType,
         ok: item.ok,
-        encryptedAcademyName: item.academy.encryptedAcademyName,
-        ivAcademyName: item.academy.ivAcademyName,
-        authTagAcademyName: item.academy.authTagAcademyName,
       }))
-      const users = refineUserDetailData(refineRawUsers);
 
-      return users;
+      return refineUsers;
     }
     catch(error)
     {
@@ -302,24 +294,17 @@ export class UsersService {
         ])
         .getMany();
 
-      const refineRawUsers: beforeDecryptionUserDetailDto[] = rawUsers.map(item => ({
+      const refineUsers: decryptionUserDetailDto[] = rawUsers.map(item => ({
         hashedUserId: item.hashedUserId,
+        rawUserId: decryptionAES256GCM(item.encryptedUserId, item.ivUserId, item.authTagUserId),
+        rawUserName: decryptionAES256GCM(item.encryptedUserName, item.ivUserName, item.authTagUserName),
         hashedAcademyId: item.hashedAcademyId,
-        encryptedUserId: item.encryptedUserId,
-        ivUserId: item.ivUserId,
-        authTagUserId: item.authTagUserId,
-        encryptedUserName: item.encryptedUserName,
-        ivUserName: item.ivUserName,
-        authTagUserName: item.authTagUserName,
+        rawAcademyName: decryptionAES256GCM(item.academy.encryptedAcademyName, item.academy.ivAcademyName, item.academy.authTagAcademyName),
         userType: item.userType,
         ok: item.ok,
-        encryptedAcademyName: item.academy.encryptedAcademyName,
-        ivAcademyName: item.academy.ivAcademyName,
-        authTagAcademyName: item.academy.authTagAcademyName,
       }))
-      const users = refineUserDetailData(refineRawUsers);
 
-      return users;
+      return refineUsers;
     }
     catch(error)
     {

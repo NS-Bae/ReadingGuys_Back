@@ -19,23 +19,6 @@ export class decryptionUserDto
   ok: boolean;
 }
 
-export class beforeDecryptionUserDetailDto
-{
-  hashedUserId: string;
-  hashedAcademyId: string;
-  encryptedUserId: Buffer;
-  ivUserId: Buffer;
-  authTagUserId: Buffer;
-  encryptedUserName: Buffer;
-  ivUserName: Buffer;
-  authTagUserName: Buffer;
-  userType: UserType;
-  ok: boolean;
-  encryptedAcademyName: Buffer;
-  ivAcademyName: Buffer;
-  authTagAcademyName: Buffer;
-}
-
 export class decryptionUserDetailDto
 {
   hashedUserId: string;
@@ -45,4 +28,14 @@ export class decryptionUserDetailDto
   rawAcademyName: string;
   userType: UserType;
   ok: boolean;
+}
+
+export class decryptionDto1
+{
+  hashedUserId: string;
+  rawUserId: string;
+  rawUserName: string;
+  WorkbookName: string;
+  ExamDate: Date;
+  ProgressRate: number;
 }
