@@ -17,15 +17,28 @@ export class AuthController {
   //일반
   @Public()
   @Post('login')
-  async login(@Body() loginDto: LoginDto): Promise<{ accessToken: string, userInfo:UserInfoDto }> {
-    return this.authService.login(loginDto);
+  async login(@Body() loginDto: LoginDto, dinfo: string, @Req() req: any): Promise<{ accessToken: string, userInfo:UserInfoDto }>
+  {
+    const rawInfo: RawLogInfoDto = {
+      rawInfo: {
+        deviceInfo: dinfo,
+        IPA: req.clientIp,
+      }
+    };
+    return this.authService.login(loginDto, rawInfo);
   }
   //관리자
   @Public()
   @Post('manager_login')
-  async managerLogin(@Body() loginDto: LoginDto, @Res() res: Response,)/* : Promise<{ accessToken: string, userInfo:string }> */ 
+  async managerLogin(@Body() loginDto: LoginDto, @Req() req: any, @Res() res: Response,)/* : Promise<{ accessToken: string, userInfo:string }> */ 
   {
-    await this.authService.managerLogin(loginDto, res);
+    const rawInfo: RawLogInfoDto = {
+      rawInfo: {
+        deviceInfo: loginDto.userAgent,
+        IPA: req.clientIp,
+      }
+    };
+    await this.authService.managerLogin(loginDto, rawInfo, res);
   }
   //로그아웃
   @Post('logout')

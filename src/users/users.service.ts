@@ -10,7 +10,7 @@ import { RawLogInfoDto } from '../dto/log.dto';
 import { decryptionUserDetailDto } from '../dto/return.dto';
 
 import { EventLogsService } from "../eventlogs/eventlogs.service";
-import { decryptionAES256GCM, encryptAES256GCM, hashSHA256 } from "../utill/encryption.service";
+import { decryptionAES256GCM, encryptAES256GCM, hashSHA256 } from "../utils/encryption.service";
 
 @Injectable()
 export class UsersService {

@@ -8,6 +8,7 @@ import { CurrentUser } from '../auth/decorators/currentUser.decorator';
 import { AddNewUserDto, SearchUsersDto, UpdateUsersDto, DeleteUsersDto } from '../dto/user.dto';
 import { RawLogInfoDto } from '../dto/log.dto';
 import { decryptionUserDetailDto } from '../dto/return.dto';
+import { Public } from 'src/auth/decorators/public.decorator';
 @Controller('users')
 export class UsersController {
   constructor(private readonly usersService: UsersService) {}
@@ -26,7 +27,7 @@ export class UsersController {
   update(@Param('id') id: string, @Body() userData: Partial<User>): Promise<User> {
     return this.usersService.update(id, userData);
   } */
-
+  
   @Post('adddata')
   async regist(@CurrentUser('hashedUserId') hashedData: string, @Body() registUserDto: AddNewUserDto, rawInfo: RawLogInfoDto)
   {

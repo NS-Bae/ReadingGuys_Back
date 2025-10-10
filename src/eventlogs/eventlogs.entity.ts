@@ -4,33 +4,33 @@ import { EventType } from "../others/other.types";
 
 @Entity( 'EventLogs' )
 export class EventLogs {
-  @PrimaryGeneratedColumn({ type: 'bigint' })
+  @PrimaryGeneratedColumn({ name: 'Id', type: 'bigint' })
   id: string;
 
-  @Column({ type: 'varchar', length: 255, nullable: false })
+  @Column({ name: 'HashedUserID', type: 'varchar', length: 255, nullable: false })
   hashedUserId: string;
 
-  @Column({ type: 'enum', enum: EventType, nullable: false })
+  @Column({ name: 'EventType', type: 'enum', enum: EventType, nullable: false })
   eventType: string;
 
-  @Column({ type: 'varbinary', length: 255, nullable: false })
+  @Column({ name: 'EncrypteDeviceInfo', type: 'varbinary', length: 255, nullable: false })
   encryptedDeviceInfo: Buffer;
 
-  @Column({ type: 'varbinary', length: 12, nullable: false })
+  @Column({ name: 'IVDeviceInfo', type: 'varbinary', length: 12, nullable: false })
   ivDeviceInfo: Buffer;
 
-  @Column({ type: 'varbinary', length: 16, nullable: false })
+  @Column({ name: 'AuthTagDeviceInfo', type: 'varbinary', length: 16, nullable: false })
   authTagDeviceInfo: Buffer;
 
-  @Column({ type: 'varbinary', length: 255, nullable: false })
+  @Column({ name: 'EncrypteIPAdress', type: 'varbinary', length: 255, nullable: false })
   encryptedIPAdress: Buffer;
 
-  @Column({ type: 'varbinary', length: 12, nullable: false })
+  @Column({ name: 'IVIPAdress', type: 'varbinary', length: 12, nullable: false })
   ivIPAdress: Buffer;
 
-  @Column({ type: 'varbinary', length: 16, nullable: false })
+  @Column({ name: 'AuthTagIPAdress', type: 'varbinary', length: 16, nullable: false })
   authTagIPAdress: Buffer;
 
-  @Column({ type: 'timestamp', nullable: false })
+  @Column({ name: 'EventTime', type: 'timestamp', nullable: false })
   eventTime: Date;
 }

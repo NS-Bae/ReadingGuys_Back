@@ -3,9 +3,10 @@ import { InjectRepository } from "@nestjs/typeorm";
 import { DataSource, Repository } from "typeorm";
 
 import { EventLogs } from "./eventlogs.entity";
-import { encryptAES256GCM, hashSHA256 } from "src/utill/encryption.service";
+import { encryptAES256GCM, hashSHA256 } from "src/utils/encryption.service";
 
 import { LogDto } from "../dto/log.dto";
+import { EventType } from "src/others/other.types";
 
 @Injectable()
 export class EventLogsService
@@ -21,6 +22,9 @@ export class EventLogsService
   async createBusinessLog(logData: LogDto)
   {
     const { log } = logData;
+    console.log(log);
+
+    const translateEvent = EventType[log.data4 as keyof typeof EventType];
 
     const encryptedDevice = encryptAES256GCM(log.data2);
     const encryptedIp = encryptAES256GCM(log.data3);
@@ -37,7 +41,7 @@ export class EventLogsService
         .into('EventLogs')
         .values({
           hashedUserId: log.data1,
-          eventType: log.data4,
+          eventType: translateEvent,
           encryptedDeviceInfo: Buffer.from(encryptedDevice.encryptedData, 'hex'),
           ivDeviceInfo: Buffer.from(encryptedDevice.iv, 'hex'),
           authTagDeviceInfo: Buffer.from(encryptedDevice.authTag, 'hex'),

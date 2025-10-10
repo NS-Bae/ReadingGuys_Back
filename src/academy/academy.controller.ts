@@ -6,17 +6,19 @@ import { RawLogInfoDto } from '../dto/log.dto';
 import { JWTPayloadDto } from '../dto/other.dto';
 
 import { CurrentUser } from '../auth/decorators/currentUser.decorator';
+import { Public } from 'src/auth/decorators/public.decorator';
 
 @Controller('academy')
 export class AcademyController{
   constructor(
     private readonly academyService : AcademyService,
   ) {}
-
+  @Public()
   @Get('totallist')
   async getAcademyList()
   {
     const academies = await this.academyService.findAll();
+    console.log(academies);
     return academies;
   };
 

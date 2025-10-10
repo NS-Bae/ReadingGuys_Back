@@ -15,7 +15,7 @@ import { decryptionAcademyDto, decryptionUserDto } from "../dto/return.dto";
 import { JWTPayloadDto } from "../dto/other.dto";
 
 import { EventLogsService } from "../eventlogs/eventlogs.service";
-import { decryptionAES256GCM, encryptAES256GCM, hashSHA256 } from "../utill/encryption.service";
+import { decryptionAES256GCM, encryptAES256GCM, hashSHA256 } from "../utils/encryption.service";
 
 @Injectable()
 export class AcademyService

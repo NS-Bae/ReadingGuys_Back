@@ -16,7 +16,7 @@ import { UploadBookDto } from '../dto/uploadWorkbook.dto';
 import { DeleteAcademyCheckedDto } from '../dto/multiChecked.dto';
 import { UpdateBookPaidDto } from '../dto/updateWorkbookPaid.dto';
 import { decryptionBookDto } from "../dto/return.dto";
-import { decryptionAES256GCM, encryptAES256GCM } from "../utill/encryption.service";
+import { decryptionAES256GCM, encryptAES256GCM } from "../utils/encryption.service";
 import { EventLogsService } from "../eventlogs/eventlogs.service";
 import { RawLogInfoDto } from "../dto/log.dto";
 

@@ -9,6 +9,7 @@ import { RawLogInfoDto } from '../dto/log.dto';
 
 import { UsersService } from '../users/users.service';
 import { EventLogsService } from '../eventlogs/eventlogs.service';
+import { encryptAES256GCM, hashSHA256 } from '../utils/encryption.service';
 
 @Injectable()
 export class AuthService {
@@ -19,22 +20,21 @@ export class AuthService {
     private readonly eventLogsService: EventLogsService,
   ) {}
 
-  refineDto(row: any, data: string)
+  refineDto(rawInfo: RawLogInfoDto, data: string)
   {
     return {
       data1: data,
-      data2: row.data1,
-      data3: row.data2,
+      data2: rawInfo.rawInfo.deviceInfo,
+      data3: rawInfo.rawInfo.IPA,
     };
   }
   //일반(전체)유저 로그인
-  async validateUser(loginDto: LoginDto): Promise<any>
+  async validateUser(loginDto: LoginDto, rawInfo: RawLogInfoDto): Promise<any>
   {
-    const { info } = loginDto;
-    const hashedData = info.ip1; //입력받은 id해쉬화
+    const hashedData = hashSHA256(loginDto.ip1); //입력받은 id해쉬화
 
     const user = await this.usersService.findOne(hashedData);
-    const logCommonData = this.refineDto(info, hashedData);
+    const logCommonData = this.refineDto(rawInfo, hashedData);
     
     if(!user)
     {
@@ -44,7 +44,7 @@ export class AuthService {
       throw new UnauthorizedException('I유저 정보가 올바르지 않습니다.');
     }
     
-    const pw_result = await bcrypt.compare(info.ip2, user.password);
+    const pw_result = await bcrypt.compare(loginDto.ip2, user.password);
 
     if(!pw_result)
     {
@@ -65,10 +65,9 @@ export class AuthService {
     return result;
   }
   //일반 로그인
-  async login(loginDto: LoginDto): Promise<{ accessToken: string, userInfo: UserInfoDto }> 
+  async login(loginDto: LoginDto, rawInfo: RawLogInfoDto): Promise<{ accessToken: string, userInfo: UserInfoDto }> 
   {
-    const user = await this.validateUser(loginDto);
-    const { info } = loginDto;
+    const user = await this.validateUser(loginDto, rawInfo);
 
     const payload =
     { 
@@ -88,7 +87,7 @@ export class AuthService {
     };
 
     const accessToken = this.jwtService.sign(payload);
-    const logCommonData = this.refineDto(info, user.hashedUserId);
+    const logCommonData = this.refineDto(rawInfo, user.hashedUserId);
 
     await this.eventLogsService.createBusinessLog({
       log: { ...logCommonData, data4: '로그인'}
@@ -97,13 +96,12 @@ export class AuthService {
     return { accessToken, userInfo: refinedUserInfo };
   }
   //관리자인증
-  async validateManager(loginDto: LoginDto): Promise<any>
+  async validateManager(loginDto: LoginDto, rawInfo: RawLogInfoDto): Promise<any>
   {
-    const { info } = loginDto;
-    const hashedData = info.ip1;
+    const hashedData = hashSHA256(loginDto.ip1);
 
     const user = await this.usersService.findOne(hashedData);
-    const logCommonData = this.refineDto(info, hashedData);
+    const logCommonData = this.refineDto(rawInfo, hashedData);
     
     if(!user)
     {
@@ -113,7 +111,7 @@ export class AuthService {
       throw new UnauthorizedException('유저 정보가 올바르지 않습니다.');
     }
     
-    const pw_result = await bcrypt.compare(info.ip2, user.password);
+    const pw_result = await bcrypt.compare(loginDto.ip2, user.password);
 
     if(!pw_result)
     {
@@ -144,20 +142,21 @@ export class AuthService {
     return result;
   }
   //관리자 로그인
-  async managerLogin(loginDto: LoginDto, res: Response)/* : Promise<{ accessToken: string }> */
+  async managerLogin(loginDto: LoginDto, rawInfo: RawLogInfoDto, res: Response)/* : Promise<{ accessToken: string }> */
   {
-    const user = await this.validateManager(loginDto);
-    const { info } = loginDto;
+    console.log('a', loginDto)
+    const user = await this.validateManager(loginDto, rawInfo);
 
     const payload = { 
       hashedUserId: user.hashedUserId,
       hashedAcademyId: user.hashedAcademyId,
       userType: user.userType,
       isItOk: user.ok,
-      iat: Math.floor(Date.now() / 1000) };
+      iat: Math.floor(Date.now() / 1000)
+    };
     
     const accessToken = this.jwtService.sign(payload);
-    const logCommonData = this.refineDto(info, user.hashedUserId);
+    const logCommonData = this.refineDto(rawInfo, user.hashedUserId);
 
     await this.eventLogsService.createBusinessLog({
       log: { ...logCommonData, data4: '로그인'}
@@ -174,8 +173,7 @@ export class AuthService {
   //로그아웃
   async logoutAll(res: Response, hashedData: string, data: RawLogInfoDto)
   {
-    const info = { data };
-    const logCommonData = this.refineDto(info, hashedData);
+    const logCommonData = this.refineDto(data, hashedData);
 
     await this.eventLogsService.createBusinessLog({
       log: { ...logCommonData, data4: '로그아웃'}

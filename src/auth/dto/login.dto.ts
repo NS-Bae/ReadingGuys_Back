@@ -1,7 +1,7 @@
 import { Type } from "class-transformer";
 import { IsNotEmpty, IsString } from "class-validator";
 
-class loginDto
+export class LoginDto
 {
   @IsString()
   @IsNotEmpty()
@@ -13,11 +13,7 @@ class loginDto
 
   @IsString()
   @IsNotEmpty()
-  data1: string; //device
-
-  @IsString()
-  @IsNotEmpty()
-  data2: string; //ip
+  userAgent: string;  //기기 정보
 }
 
 class userInfoDto
@@ -39,11 +35,11 @@ class userInfoDto
   ok: string;
 }
 
-export class LoginDto
+/* export class LoginDto
 {
   @Type(() => loginDto)
   info: loginDto;
-}
+} */
 
 export class UserInfoDto
 {
