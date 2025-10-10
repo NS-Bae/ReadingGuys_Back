@@ -6,7 +6,7 @@ import { User } from "src/users/users.entity";
 @Entity( 'TermsAgreement' )
 export class TermsAgreement {
   @PrimaryGeneratedColumn({ type: 'bigint' })
-  id: StaticRange;
+  id: string;
 
   @Column({ type: 'varchar', length: 255, nullable: false })
   hashedUserId: string;

@@ -1,10 +1,9 @@
 import { randomBytes, createCipheriv, createHash, createDecipheriv } from 'crypto';
 
-const key = Buffer.from(process.env.AES_KEY, 'hex'); // 32바이트 AES-256 키
-
 // AES-256-GCM 암호화
 export function encryptAES256GCM(data: string)
 {
+  const key = Buffer.from(process.env.AES_KEY, 'hex'); // 32바이트 AES-256 키
   const iv = randomBytes(12);
   const cipher = createCipheriv('aes-256-gcm', key, iv);
   
@@ -30,6 +29,7 @@ export function hashSHA256(value: string)
 //AES-256-GCM
 export function decryptionAES256GCM(encryptedPart: Buffer, ivPart: Buffer, authTagPart: Buffer): string
 {
+  const key = Buffer.from(process.env.AES_KEY, 'hex'); // 32바이트 AES-256 키
   const decipher = createDecipheriv('aes-256-gcm', key, ivPart);
   decipher.setAuthTag(authTagPart);
 
