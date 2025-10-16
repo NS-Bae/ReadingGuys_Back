@@ -22,7 +22,6 @@ export class EventLogsService
   async createBusinessLog(logData: LogDto)
   {
     const { log } = logData;
-    console.log(log);
 
     const translateEvent = EventType[log.data4 as keyof typeof EventType];
 

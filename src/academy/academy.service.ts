@@ -132,7 +132,7 @@ export class AcademyService
         .delete()
         .from(Academy)
         .whereInIds(
-          checkedRows.map((row) => ({ heahedAcademyId: row.data1 })),
+          checkedRows.map((row) => ({ hashedAcademyId: row.data1 })),
         )
         .execute();
       const deletedCount = deleteResult.affected || 0;
@@ -236,7 +236,7 @@ export class AcademyService
     const { data } = addNewAcademyDto;
     const currentEndOfMonth = endOfMonth(new Date());
     const today = new Date();
-    const logCommonData = this.refineDto(hashedUserId, rawInfo)
+    const logCommonData = this.refineDto(hashedUserId, rawInfo);
 
     if(!data || !Array.isArray(data) || data.length === 0)
     {

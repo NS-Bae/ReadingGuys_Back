@@ -1,4 +1,4 @@
-import { Controller, Post, Get, Param, Body, Put, Delete, Logger, Patch } from '@nestjs/common';
+import { Controller, Post, Get, Param, Body, Put, Delete, Logger, Patch, Req } from '@nestjs/common';
 import { AcademyService } from './academy.service';
 
 import { DeleteAcademyCheckedDto, RegistAcademyCheckedDto, UpdateAcademyPaidCheckedDto } from '../dto/multiChecked.dto';
@@ -18,13 +18,19 @@ export class AcademyController{
   async getAcademyList()
   {
     const academies = await this.academyService.findAll();
-    console.log(academies);
     return academies;
   };
 
   @Delete('deletedata')
-  async deleteAcademy(@CurrentUser('hashedUserId') hashedUserId: string, @Body() deleteCheckedDto: DeleteAcademyCheckedDto, rawInfo: RawLogInfoDto)
+  async deleteAcademy(@CurrentUser('hashedUserId') hashedUserId: string, @Req() req: any, @Body() deleteCheckedDto: DeleteAcademyCheckedDto)
   {
+    const userAgent = req.get('user-agent');
+    const rawInfo: RawLogInfoDto = {
+      rawInfo: {
+        deviceInfo: userAgent,
+        IPA: req.clientIp,
+      }
+    };
     return this.academyService.deleteData(deleteCheckedDto, hashedUserId, rawInfo);
   };
 
@@ -33,10 +39,17 @@ export class AcademyController{
   {
     return this.academyService.updateNovation(updateAcademyDto, hashedUserId, rawInfo);
   }
-
+  
   @Post('adddata')
-  async registNewAcademy(@CurrentUser('hashedUserId') hashedUserId: string, @Body() addNewAcademyDto: RegistAcademyCheckedDto, rawInfo: RawLogInfoDto)
+  async registNewAcademy(@CurrentUser('hashedUserId') hashedUserId: string, @Req() req: any, @Body() addNewAcademyDto: RegistAcademyCheckedDto)
   {
+    const userAgent = req.get('user-agent');
+    const rawInfo: RawLogInfoDto = {
+      rawInfo: {
+        deviceInfo: userAgent,
+        IPA: req.clientIp,
+      }
+    };
     return this.academyService.registNewAcademy(addNewAcademyDto, hashedUserId, rawInfo);
   }
 
