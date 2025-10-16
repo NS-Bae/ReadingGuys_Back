@@ -32,9 +32,10 @@ export class AuthController {
   @Post('manager_login')
   async managerLogin(@Body() loginDto: LoginDto, @Req() req: any, @Res() res: Response,)/* : Promise<{ accessToken: string, userInfo:string }> */ 
   {
+    const userAgent = req.get('user-agent');
     const rawInfo: RawLogInfoDto = {
       rawInfo: {
-        deviceInfo: loginDto.userAgent,
+        deviceInfo: userAgent,
         IPA: req.clientIp,
       }
     };
@@ -42,11 +43,12 @@ export class AuthController {
   }
   //로그아웃
   @Post('manager_logout')
-  async managerLogout(@CurrentUser('hashedUserId') hashedData: string, @Req() req: any, @Res() res: Response, @Body() data: any)
+  async managerLogout(@CurrentUser('hashedUserId') hashedData: string, @Req() req: any, @Res() res: Response)
   {
+    const userAgent = req.get('user-agent');
     const rawInfo: RawLogInfoDto = {
       rawInfo: {
-        deviceInfo: data.userAgent,
+        deviceInfo: userAgent,
         IPA: req.clientIp,
       }
     };

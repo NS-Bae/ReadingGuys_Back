@@ -10,10 +10,6 @@ export class LoginDto
   @IsString()
   @IsNotEmpty()
   ip2: string;  //평문 비번
-
-  @IsString()
-  @IsNotEmpty()
-  userAgent: string;  //기기 정보
 }
 
 class userInfoDto
