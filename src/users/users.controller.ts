@@ -1,5 +1,5 @@
 // src/users/users.controller.ts
-import { Controller, Post, Get, Body, Delete } from '@nestjs/common';
+import { Controller, Post, Get, Body, Delete, Req } from '@nestjs/common';
 
 import { UsersService } from './users.service';
 
@@ -29,8 +29,15 @@ export class UsersController {
   } */
   
   @Post('adddata')
-  async regist(@CurrentUser('hashedUserId') hashedData: string, @Body() registUserDto: AddNewUserDto, rawInfo: RawLogInfoDto)
+  async regist(@CurrentUser('hashedUserId') hashedData: string, @Req() req: any, @Body() registUserDto: AddNewUserDto)
   {
+    const userAgent = req.get('user-agent');
+    const rawInfo: RawLogInfoDto = {
+      rawInfo: {
+        deviceInfo: userAgent,
+        IPA: req.clientIp,
+      }
+    };
     return this.usersService.registUsers(hashedData, registUserDto, rawInfo);
   }
 
@@ -41,14 +48,28 @@ export class UsersController {
   }
 
   @Post('changedata')
-  async updateInfo(@CurrentUser() payload: any, @Body() updateUsersDto: UpdateUsersDto, rawInfo: RawLogInfoDto)
+  async updateInfo(@CurrentUser() payload: any, @Req() req: any, @Body() updateUsersDto: UpdateUsersDto)
   {
+    const userAgent = req.get('user-agent');
+    const rawInfo: RawLogInfoDto = {
+      rawInfo: {
+        deviceInfo: userAgent,
+        IPA: req.clientIp,
+      }
+    };
     return this.usersService.updateUsers(payload.hashedUserId, updateUsersDto, rawInfo);
   }
 
   @Delete('deletedata')
-  async deleteUsers(@CurrentUser() payload: any, @Body() deleteCheckedDto: DeleteUsersDto, rawInfo: RawLogInfoDto)
+  async deleteUsers(@CurrentUser() payload: any, @Req() req: any, @Body() deleteCheckedDto: DeleteUsersDto)
   {
+    const userAgent = req.get('user-agent');
+    const rawInfo: RawLogInfoDto = {
+      rawInfo: {
+        deviceInfo: userAgent,
+        IPA: req.clientIp,
+      }
+    };
     return this.usersService.deleteUsers(payload.hashedUserId, deleteCheckedDto, rawInfo);
   }
 }
