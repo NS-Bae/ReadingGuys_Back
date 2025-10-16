@@ -35,8 +35,16 @@ export class AcademyController{
   };
 
   @Patch('novation')
-  async updateAcademyNovation(@CurrentUser('hashedUserId') hashedUserId: string, @Body()updateAcademyDto: UpdateAcademyPaidCheckedDto, rawInfo: RawLogInfoDto)
+  async updateAcademyNovation(@CurrentUser('hashedUserId') hashedUserId: string, @Req() req: any, @Body()updateAcademyDto: UpdateAcademyPaidCheckedDto)
   {
+    const userAgent = req.get('user-agent');
+    const rawInfo: RawLogInfoDto = {
+      rawInfo: {
+        deviceInfo: userAgent,
+        IPA: req.clientIp,
+      }
+    };
+    console.log(updateAcademyDto);
     return this.academyService.updateNovation(updateAcademyDto, hashedUserId, rawInfo);
   }
   

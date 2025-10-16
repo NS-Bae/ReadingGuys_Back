@@ -185,7 +185,7 @@ export class AcademyService
           endMonth: currentEndOfMonth,
         })
         .whereInIds(
-          checkedRows.map((row) => ({ heahedAcademyId: row.data1 })),
+          checkedRows.map((row) => ({ hashedAcademyId: row.data1 })),
         ) 
         .execute();
       const updatedAcademyCount = updateAcademyResult.affected || 0;
