@@ -41,9 +41,15 @@ export class AuthController {
     await this.authService.managerLogin(loginDto, rawInfo, res);
   }
   //로그아웃
-  @Post('logout')
-  async logout(@CurrentUser('hashedUserId') hashedData: string, @Res() res: Response, @Body() data: RawLogInfoDto)
+  @Post('manager_logout')
+  async managerLogout(@CurrentUser('hashedUserId') hashedData: string, @Req() req: any, @Res() res: Response, @Body() data: any)
   {
-    await this.authService.logoutAll(res, hashedData, data);
+    const rawInfo: RawLogInfoDto = {
+      rawInfo: {
+        deviceInfo: data.userAgent,
+        IPA: req.clientIp,
+      }
+    };
+    await this.authService.logoutManager(res, hashedData, rawInfo);
   }
 }

@@ -9,7 +9,7 @@ import { RawLogInfoDto } from '../dto/log.dto';
 
 import { UsersService } from '../users/users.service';
 import { EventLogsService } from '../eventlogs/eventlogs.service';
-import { encryptAES256GCM, hashSHA256 } from '../utils/encryption.service';
+import { hashSHA256 } from '../utils/encryption.service';
 
 @Injectable()
 export class AuthService {
@@ -144,7 +144,6 @@ export class AuthService {
   //관리자 로그인
   async managerLogin(loginDto: LoginDto, rawInfo: RawLogInfoDto, res: Response)/* : Promise<{ accessToken: string }> */
   {
-    console.log('a', loginDto)
     const user = await this.validateManager(loginDto, rawInfo);
 
     const payload = { 
@@ -167,11 +166,11 @@ export class AuthService {
       secure: process.env.COOKIE_SECURE === "true",
       sameSite: "strict",
       maxAge: 1800000,//30분
-    })
+    });
     return res.json({ message: '로그인 성공', accessToken });
   }
   //로그아웃
-  async logoutAll(res: Response, hashedData: string, data: RawLogInfoDto)
+  async logoutManager(res: Response, hashedData: string, data: RawLogInfoDto)
   {
     const logCommonData = this.refineDto(data, hashedData);
 

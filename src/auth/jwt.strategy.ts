@@ -9,14 +9,8 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
   constructor() {
     super({
       jwtFromRequest: ExtractJwt.fromExtractors([
+        (req:Request) => req?.cookies?.['access_token'] || null,
         ExtractJwt.fromAuthHeaderAsBearerToken(),
-        (req: Request) => {
-          if(req && req.cookies)
-          {
-            return req.cookies['access_token']
-          }
-          return null;
-        }
       ]),
       ignoreExpiration: false,
       secretOrKey: process.env.JWT_SECRET,
@@ -27,7 +21,7 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
     return{
       hashedUserId: payload.hashedUserId,
       hashedAcademyId: payload.hashedAcademyId,
-      userType: payload.usertype,
+      userType: payload.userType,
       ok: payload.isItOk,
     };
   }
