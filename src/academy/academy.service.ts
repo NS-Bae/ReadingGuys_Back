@@ -294,7 +294,6 @@ export class AcademyService
   //소속학원생숫자와 내 학원 정보 보내기
   async getAcademyInfo(userInfo: JWTPayloadDto)
   {
-    console.log(userInfo);
     const hashedAcademy = userInfo.hashedAcademyId;
 
     const rawMyAcademy = await this.academyRepository.findOne({where : {hashedAcademyId : hashedAcademy}});
