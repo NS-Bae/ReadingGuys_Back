@@ -222,16 +222,23 @@ export class UsersService {
 
   async deleteUsers(hashedData: string, deleteCheckedDto: DeleteUsersDto, rawInfo: RawLogInfoDto): Promise<{deletedCount: number}>
   {
-    const { checkedRow } = deleteCheckedDto;
+    const { checkedRows } = deleteCheckedDto;
     const device = rawInfo.rawInfo.deviceInfo;
     const ia = rawInfo.rawInfo.IPA;
 
-    const hashedUserIds = checkedRow.map(row => row.data2);
-    const hashedAcademyIds = checkedRow.map(row => row.data1);
+    const condition = checkedRows
+      .map((_, i) => `(hashedAcademyId = :aid${i} AND hashedUserId = :uid${i})`)
+      .join('OR');
+    
+    const params = checkedRows.reduce((acc, row, i) => {
+      acc[`aid${i}`] = row.data1;
+      acc[`uid${i}`] = row.data2;
+      return acc;
+    }, {});
 
     const logCommonData = this.refineDto(hashedData, device, ia);
 
-    if(checkedRow.length === 0)
+    if(checkedRows.length === 0)
     {
       await this.eventLogsService.createBusinessLog({log: { ...logCommonData, data4: '회원삭제실패' }});
       throw new NotFoundException('삭제할 데이터가 없습니다.');
@@ -248,8 +255,7 @@ export class UsersService {
         .createQueryBuilder()
         .delete()
         .from(User)
-        .where('hashedUserId IN (:...hashedUserIds)', { hashedUserIds })
-        .andWhere('hashedAcademyId IN (:...hashedAcademyIds)', { hashedAcademyIds })
+        .where(condition, params)
         .execute();
 
       await queryRunner.commitTransaction();

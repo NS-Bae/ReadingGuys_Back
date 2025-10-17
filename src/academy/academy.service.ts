@@ -194,9 +194,7 @@ export class AcademyService
         .createQueryBuilder()
         .update(User)
         .set({ok: true})
-        .whereInIds(
-          checkedRows.map((row) => ({ hashedAcademyId: row.data1 }))
-        )
+        .where('hashedAcademyId IN (:...hashedAcademyIds)', {hashedAcademyIds: checkedRows.map((row) => row.data1),})
         .execute();
       const updatedUserCount = updateUserResult.affected || 0;
 

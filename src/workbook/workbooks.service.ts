@@ -77,7 +77,9 @@ export class WorkbookService {
     const workBooks: decryptionBookDto[] = rawWorkbooks.map(item => ({
       workbookId: item.workbookId,
       workbookName: item.workbookName,
+      isPaid: item.isPaid,
       Difficulty: item.Difficulty,
+      releaseMonth: item.releaseMonth,
       storageLink: decryptionAES256GCM(item.encryptedStorageLink, item.ivStorageLink, item.authTagStorageLink),
     }));
 
@@ -104,8 +106,6 @@ export class WorkbookService {
   //workbook upload push alert NOTYET
   async uploadWorkbook(data)
   {
-    console.log('문제집 업로드 완료');
-
     const userDeviceToken = 'test';
     const title = '새 문제집이 업로드되었습니다!';
     const body = '문제집을 확인하려면 앱을 열어보세요.';
@@ -127,7 +127,6 @@ export class WorkbookService {
     }
 
     filePath = join(process.cwd(), "uploads", file.filename);
-    console.log("📂 파일 저장 경로:", filePath);
 
     /* // AWS S3로 업로드
     let fileUrl = null;

@@ -44,7 +44,6 @@ export class AcademyController{
         IPA: req.clientIp,
       }
     };
-    console.log(updateAcademyDto);
     return this.academyService.updateNovation(updateAcademyDto, hashedUserId, rawInfo);
   }
   

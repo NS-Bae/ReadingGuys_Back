@@ -1,4 +1,4 @@
-import { Controller, Query, Get, Res, Body, Post, BadRequestException, UseInterceptors, UploadedFile, Delete } from '@nestjs/common';
+import { Controller, Query, Get, Res, Body, Post, BadRequestException, UseInterceptors, UploadedFile, Delete, Req } from '@nestjs/common';
 import { Response } from 'express';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { Multer } from "multer";
@@ -33,12 +33,23 @@ export class WorkbookController {
   }
   //책 다운로드
   @Post('download')
-  async downloadBook(@CurrentUser('hashedUserId') data: string, @Body('storageLink') storageLink : string, rawInfo: RawLogInfoDto, @Res() res : Response)
+  async downloadBook(
+    @CurrentUser('hashedUserId') data: string,
+    @Body('storageLink') storageLink : string,
+    @Req() req: any,
+    @Res() res : Response)
   {
     if(!storageLink)
     {
       throw new BadRequestException('파일경로가 존재하지 않습니다.');
     }
+    const userAgent = req.get('user-agent');
+    const rawInfo: RawLogInfoDto = {
+      rawInfo: {
+        deviceInfo: userAgent,
+        IPA: req.clientIp,
+      }
+    };
     const bookLink = await this.workbookService.getWorkbookDownload(data, storageLink, rawInfo);
     res.setHeader('Content-Disposition', `attachment; filename="${encodeURIComponent(storageLink)}"`);
     res.sendFile(bookLink);
@@ -48,22 +59,50 @@ export class WorkbookController {
   @UseInterceptors(FileInterceptor("file", multerConfig))
   async uploadBook(
     @CurrentUser('hashedUserId') hashedData: string, 
-    @Body() data: UploadBookDto, rawInfo: RawLogInfoDto,
+    @Req() req: any,
+    @Body() data: UploadBookDto,
     @UploadedFile() file: Multer.File
     )
   {
+    const userAgent = req.get('user-agent');
+    const rawInfo: RawLogInfoDto = {
+      rawInfo: {
+        deviceInfo: userAgent,
+        IPA: req.clientIp,
+      }
+    };
     return this.workbookService.uploadWorkbookFile(data, hashedData, rawInfo, file);
   }
   //책 삭제
   @Delete('deletedata')
-  async deleteBook(@CurrentUser('hashedUserId') data: string, @Body() deleteCheckedRow: DeleteAcademyCheckedDto, rawInfo: RawLogInfoDto)
+  async deleteBook(
+    @CurrentUser('hashedUserId') data: string,
+    @Req() req: any,
+    @Body() deleteCheckedRow: DeleteAcademyCheckedDto)
   {
+    const userAgent = req.get('user-agent');
+    const rawInfo: RawLogInfoDto = {
+      rawInfo: {
+        deviceInfo: userAgent,
+        IPA: req.clientIp,
+      }
+    };
     return this.workbookService.deleteWorkbook(deleteCheckedRow, data, rawInfo);
   }
   //책 변경(유료 무료)
   @Post('changedata')
-  async updateBook(@CurrentUser('hashedUserId') data: string, @Body() updateCheckedRow: UpdateBookPaidDto, rawInfo: RawLogInfoDto)
+  async updateBook(
+    @CurrentUser('hashedUserId') data: string,
+    @Req() req: any,
+    @Body() updateCheckedRow: UpdateBookPaidDto)
   {
+    const userAgent = req.get('user-agent');
+    const rawInfo: RawLogInfoDto = {
+      rawInfo: {
+        deviceInfo: userAgent,
+        IPA: req.clientIp,
+      }
+    };
     return this.workbookService.updateWorkbookPaid(updateCheckedRow, data, rawInfo);
   }
 }

@@ -70,5 +70,5 @@ export class DeleteUsersDto {
   @IsArray()
   @ValidateNested({ each: true })
   @Type(() => CheckedUserDto)
-  checkedRow: CheckedUserDto[];
+  checkedRows: CheckedUserDto[];
 };
