@@ -60,10 +60,10 @@ export class AcademyController{
     return this.academyService.registNewAcademy(addNewAcademyDto, hashedUserId, rawInfo);
   }
 
-  @Post('myinfo')
+  @Get('myinfo')
   async getAcademyInfo(@CurrentUser() payload: JWTPayloadDto)
   {
-    return this.academyService.getAcademyStudent(payload);
+    return this.academyService.getAcademyInfo(payload);
   }
 
   @Post('academystudentlist')
