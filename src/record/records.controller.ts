@@ -8,6 +8,7 @@ import { SearchDetailRecordDto } from '../dto/searchOneWorkbookOneStudent.dto';
 import { ExamRecordDataDto } from "../dto/examRecord.dto";
 import { ReadFileParamsDto } from "../dto/readFile.dto";
 import { RawLogInfoDto } from "../dto/log.dto";
+import { OneStudentDto } from "../dto/other.dto";
 
 @Controller('records')
 export class RecordsController {
@@ -20,9 +21,9 @@ export class RecordsController {
   }
 
   @Post('onestudent')
-  async getOneAcademyStudent(@CurrentUser('hashedAcademyId') hashedData: string, @Body() data: { data: string } )//전달받은 data = hasheduserid_userName
+  async getOneAcademyStudent(@CurrentUser('hashedAcademyId') hashedData: string, @Body() data: OneStudentDto)
   {
-    return this.recordsService.getOneAcademyStudentRecord(hashedData, data);
+    return this.recordsService.getOneAcademyStudentRecord(hashedData, data.data);
   }
 
   @Post('oneonerecord')

@@ -7,3 +7,8 @@ export class JWTPayloadDto
   userType: UserType;
   ok: boolean;
 }
+
+export class OneStudentDto 
+{
+  data: string;
+}

@@ -102,11 +102,8 @@ export class RecordsService {
     }
   }
 
-  async getOneAcademyStudentRecord(hashedData, data: { data: string })
+  async getOneAcademyStudentRecord(hashedData, data: string)
   {
-    const splitData = data.data.split('_');
-    const splitId = splitData[0];
-
     try
     {
       const records = await this.recordsRepository
@@ -126,8 +123,8 @@ export class RecordsService {
           "records.ExamDate as ExamDate",
           "records.ProgressRate as ProgressRate",
         ])
-        .where('academy.academyId = :academyId', { academyId: hashedData })
-        .andWhere('user.hashedUserId = :hashedUserId', {hashedUserId: splitId})
+        .where('academy.hashedAcademyId = :hashedAcademyId', { hashedAcademyId: hashedData })
+        .andWhere('user.hashedUserId = :hashedUserId', {hashedUserId: data})
         .getRawMany();
 
       const refineTimeRawData =  records.map(record => ({
