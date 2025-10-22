@@ -1,6 +1,7 @@
-import { Controller, Post, Body } from "@nestjs/common";
+import { Controller, Post, Body, Req } from "@nestjs/common";
 
 import { RecordsService } from './records.service';
+import { DeviceInfo } from "../auth/decorators/deviceInfo.decorator";
 
 import { CurrentUser } from '../auth/decorators/currentUser.decorator';
 
@@ -33,8 +34,18 @@ export class RecordsController {
   }
 
   @Post('createrecord')
-  async createExamRecord(@CurrentUser([ 'hashedUserId', 'hashedAcademyID' ]) hashedData: any, @Body() examRecordData: ExamRecordDataDto, rawInfo: RawLogInfoDto)
+  async createExamRecord(
+    @Req() req: any,
+    @DeviceInfo() { deviceInfo },
+    @CurrentUser([ 'hashedUserId', 'hashedAcademyID' ]) hashedData: any,
+    @Body() examRecordData: ExamRecordDataDto)
   {
+    const rawInfo: RawLogInfoDto = {
+      rawInfo: {
+        deviceInfo: deviceInfo,
+        IPA: req.clientIp,
+      }
+    };
     return this.recordsService.saveOneStudentExamRecord(hashedData.hashedUserId, hashedData.hashedAcademyID, examRecordData, rawInfo);
   }
 
