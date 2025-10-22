@@ -57,7 +57,7 @@ export class WorkbookService {
     const startMonth = start.getMonth() + 1;
 
 
-    const rawWorkbooks = await this.workbookRepository
+    const workBooks = await this.workbookRepository
       .createQueryBuilder('workbook')
       .where(
         `(YEAR(workbook.releaseMonth) > :startYear OR
@@ -69,18 +69,8 @@ export class WorkbookService {
         'workbook.workbookId',
         'workbook.workbookName',
         'workbook.Difficulty',
-        'workbook.encryptedStorageLink',
-        'workbook.ivStorageLink',
-        'workbook.authTagStorageLink',
       ])
       .getMany();
-
-    const workBooks: decryptionBookDto[] = rawWorkbooks.map(item => ({
-      workbookId: item.workbookId,
-      workbookName: item.workbookName,
-      Difficulty: item.Difficulty,
-      storageLink: decryptionAES256GCM(item.encryptedStorageLink, item.ivStorageLink, item.authTagStorageLink),
-    }));
 
     return workBooks;
   }
