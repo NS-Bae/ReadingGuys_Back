@@ -1,6 +1,6 @@
 import { BadRequestException, Injectable, InternalServerErrorException, Logger, NotFoundException } from "@nestjs/common";
 import { InjectRepository } from "@nestjs/typeorm";
-import { DataSource, MoreThan, Repository } from "typeorm";
+import { DataSource, MoreThan, Raw, Repository } from "typeorm";
 import * as path from "path";
 import * as fs from "fs";
 import { Multer } from 'multer';
@@ -52,14 +52,28 @@ export class WorkbookService {
       throw new Error('학원정보가 없습니다');
     }
 
-    const startMonth = academy.startMonth;
+    const start = new Date(academy.startMonth);
+    const startYear = start.getFullYear();
+    const startMonth = start.getMonth() + 1;
 
-    const rawWorkbooks = await this.workbookRepository.find({
-      where : {
-        releaseMonth : MoreThan(startMonth),
-      }, 
-      select : ['workbookId', 'workbookName', 'Difficulty', 'encryptedStorageLink', 'ivStorageLink', 'authTagStorageLink'],
-    });
+
+    const rawWorkbooks = await this.workbookRepository
+      .createQueryBuilder('workbook')
+      .where(
+        `(YEAR(workbook.releaseMonth) > :startYear OR
+        (YEAR(workbook.releaseMonth) = :startYear AND MONTH(workbook.releaseMonth) >= :startMonth))`,
+        { startYear, startMonth },
+      )
+      .orWhere('workbook.isPaid = false')
+      .select([
+        'workbook.workbookId',
+        'workbook.workbookName',
+        'workbook.Difficulty',
+        'workbook.encryptedStorageLink',
+        'workbook.ivStorageLink',
+        'workbook.authTagStorageLink',
+      ])
+      .getMany();
 
     const workBooks: decryptionBookDto[] = rawWorkbooks.map(item => ({
       workbookId: item.workbookId,

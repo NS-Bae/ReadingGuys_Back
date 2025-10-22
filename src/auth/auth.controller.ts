@@ -8,6 +8,7 @@ import { RawLogInfoDto } from '../dto/log.dto';
 
 import { Public } from './decorators/public.decorator';
 import { CurrentUser } from './decorators/currentUser.decorator';
+import { DeviceInfo } from './decorators/deviceInfo.decorator';
 
 @Controller('auth')
 export class AuthController {
@@ -17,11 +18,15 @@ export class AuthController {
   //일반
   @Public()
   @Post('login')
-  async login(@Body() loginDto: LoginDto, dinfo: string, @Req() req: any): Promise<{ accessToken: string, userInfo:UserInfoDto }>
+  async login(
+    @Body() loginDto: LoginDto,
+    @Req() req: any,
+    @DeviceInfo() { deviceInfo }
+  ): Promise<{ accessToken: string, userInfo:UserInfoDto }>
   {
     const rawInfo: RawLogInfoDto = {
       rawInfo: {
-        deviceInfo: dinfo,
+        deviceInfo: deviceInfo,
         IPA: req.clientIp,
       }
     };

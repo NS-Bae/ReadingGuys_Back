@@ -20,7 +20,7 @@ class userInfoDto
   
   @IsString()
   @IsNotEmpty()
-  hashedAcademyID: string;
+  hashedAcademyId: string;
 
   @IsString()
   @IsNotEmpty()

@@ -80,11 +80,12 @@ export class AuthService {
     {
       info: {
         hashedUserId: user.hashedUserId,
-        hashedAcademyID: user.hashedAcademyID,
+        hashedAcademyId: user.hashedAcademyId,
         userType: user.userType,
         ok: user.ok,
       }
     };
+    console.log(refinedUserInfo)
 
     const accessToken = this.jwtService.sign(payload);
     const logCommonData = this.refineDto(rawInfo, user.hashedUserId);
