@@ -28,25 +28,26 @@ export class RecordsController {
   }
 
   @Post('oneonerecord')
-  async getOneWorkbookExamRecord(@CurrentUser([ 'hashedUserId', 'hashedAcademyID' ]) hashedData: any, @Body() searchDetailRecordDto: SearchDetailRecordDto)
+  async getOneWorkbookExamRecord(@CurrentUser([ 'hashedUserId', 'hashedAcademyId' ]) hashedData: any, @Body() searchDetailRecordDto: SearchDetailRecordDto)
   {
-    return this.recordsService.getOneStudentOneWorkbookRecord(hashedData.hashedUserId, hashedData.hashedAcademyID, searchDetailRecordDto);
+    return this.recordsService.getOneStudentOneWorkbookRecord(hashedData.hashedUserId, hashedData.hashedAcademyId, searchDetailRecordDto);
   }
 
   @Post('createrecord')
   async createExamRecord(
     @Req() req: any,
     @DeviceInfo() { deviceInfo },
-    @CurrentUser([ 'hashedUserId', 'hashedAcademyID' ]) hashedData: any,
+    @CurrentUser([ 'hashedUserId', 'hashedAcademyId' ]) hashedData: any,
     @Body() examRecordData: ExamRecordDataDto)
   {
+    console.log(hashedData);
     const rawInfo: RawLogInfoDto = {
       rawInfo: {
         deviceInfo: deviceInfo,
         IPA: req.clientIp,
       }
     };
-    return this.recordsService.saveOneStudentExamRecord(hashedData.hashedUserId, hashedData.hashedAcademyID, examRecordData, rawInfo);
+    return this.recordsService.saveOneStudentExamRecord(hashedData.hashedUserId, hashedData.hashedAcademyId, examRecordData, rawInfo);
   }
 
   @Post('readFile')

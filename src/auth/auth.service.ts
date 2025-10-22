@@ -71,7 +71,7 @@ export class AuthService {
     const payload =
     { 
       hashedUserId: user.hashedUserId,
-      hashedAcademyID: user.hashedAcademyID,
+      hashedAcademyId: user.hashedAcademyId,
       userType: user.userType,
       isItOk: user.ok
     };
