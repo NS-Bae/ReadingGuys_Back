@@ -12,7 +12,7 @@ import { unlink } from "fs/promises";
 import { Workbook } from './workbooks.entity';
 import { Academy } from '../academy/academy.entity';
 import { FirebaseService } from '../firebase/firebase.service';
-import { UploadBookDto } from '../dto/uploadWorkbook.dto';
+import { UploadBookDto, DownLoadBookDto } from '../dto/workbook.dto';
 import { DeleteAcademyCheckedDto } from '../dto/multiChecked.dto';
 import { UpdateBookPaidDto } from '../dto/updateWorkbookPaid.dto';
 import { decryptionBookDto } from "../dto/return.dto";
@@ -90,13 +90,26 @@ export class WorkbookService {
     return workBooks;
   }
   //workbookDownload
-  async getWorkbookDownload(data: string, storageLink: string, rawInfo: RawLogInfoDto): Promise<string>
+  async getWorkbookDownload(data: string, bookData: DownLoadBookDto, rawInfo: RawLogInfoDto): Promise<string>
   {
-    const filePath = path.resolve(storageLink);
+    const { workbookId, workbookName } = bookData;
     const device = rawInfo.rawInfo.deviceInfo;
     const ia = rawInfo.rawInfo.IPA;
 
     const logCommonData = this.refineDto(data, device, ia);
+
+    const RawFilePath = await this.workbookRepository
+      .createQueryBuilder('workbook')
+      .where('workbook.workbookId = :pWorkbookId', { pWorkbookId: workbookId })
+      .andWhere('workbook.workbookName = :pWorkbookName', { pWorkbookName: workbookName })
+      .select([
+        'workbook.encryptedStorageLink',
+        'workbook.ivStorageLink',
+        'workbook.authTagStorageLink',
+      ])
+      .getOne();
+
+    const filePath = decryptionAES256GCM(RawFilePath.encryptedStorageLink, RawFilePath.ivStorageLink, RawFilePath.authTagStorageLink);
 
     if(!fs.existsSync(filePath))
     {

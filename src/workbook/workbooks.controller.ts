@@ -6,11 +6,12 @@ import { Multer } from "multer";
 import { WorkbookService } from './workbooks.service';
 import { multerConfig } from './multer.config';
 
-import { UploadBookDto } from '../dto/uploadWorkbook.dto';
+import { UploadBookDto, DownLoadBookDto } from '../dto/workbook.dto';
 import { DeleteAcademyCheckedDto } from '../dto/multiChecked.dto';
 import { UpdateBookPaidDto } from '../dto/updateWorkbookPaid.dto';
-import { CurrentUser } from '../auth/decorators/currentUser.decorator';
 import { RawLogInfoDto } from '../dto/log.dto';
+
+import { CurrentUser } from '../auth/decorators/currentUser.decorator';
 
 @Controller('workbook')
 export class WorkbookController {
@@ -35,13 +36,13 @@ export class WorkbookController {
   @Post('download')
   async downloadBook(
     @CurrentUser('hashedUserId') data: string,
-    @Body('storageLink') storageLink : string,
+    @Body() bookData : DownLoadBookDto,
     @Req() req: any,
     @Res() res : Response)
   {
-    if(!storageLink)
+    if(!bookData)
     {
-      throw new BadRequestException('파일경로가 존재하지 않습니다.');
+      throw new BadRequestException('정보가 올바르지 않습니다.');
     }
     const userAgent = req.get('user-agent');
     const rawInfo: RawLogInfoDto = {
@@ -50,8 +51,8 @@ export class WorkbookController {
         IPA: req.clientIp,
       }
     };
-    const bookLink = await this.workbookService.getWorkbookDownload(data, storageLink, rawInfo);
-    res.setHeader('Content-Disposition', `attachment; filename="${encodeURIComponent(storageLink)}"`);
+    const bookLink = await this.workbookService.getWorkbookDownload(data, bookData, rawInfo);
+    res.setHeader('Content-Disposition', `attachment; filename="${encodeURIComponent(bookLink)}"`);
     res.sendFile(bookLink);
   }
   //책 업로드

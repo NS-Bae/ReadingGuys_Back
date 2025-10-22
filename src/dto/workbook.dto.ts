@@ -20,3 +20,15 @@ export class UploadBookDto
 
   file: Multer.File;
 }
+
+export class DownLoadBookDto
+{
+  @IsString()
+  workbookId: string;
+
+  @IsString()
+  workbookName: string;
+
+  @IsEnum(Difficulty)
+  Difficulty: Difficulty;
+}

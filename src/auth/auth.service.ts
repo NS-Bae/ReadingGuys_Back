@@ -1,4 +1,3 @@
-import * as jwt from 'jsonwebtoken';
 import * as bcrypt from 'bcrypt';
 import { Injectable, Logger, UnauthorizedException } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
