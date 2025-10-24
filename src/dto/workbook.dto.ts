@@ -1,5 +1,5 @@
-import { IsBoolean, IsDate, IsEnum, IsString } from "class-validator";
-import { Transform } from "class-transformer";
+import { IsArray, IsBoolean, IsDate, IsEnum, IsString, ValidateNested } from "class-validator";
+import { Transform, Type } from "class-transformer";
 import { Difficulty } from '../others/other.types';
 import { Multer } from "multer";
 
@@ -32,3 +32,17 @@ export class DownLoadBookDto
   @IsEnum(Difficulty)
   Difficulty: Difficulty;
 }
+
+class DataDto {
+  @IsString()
+  data1: number;
+  @IsString()
+  data2: string;
+};
+
+export class UpdateBookPaidDto {
+  @IsArray()
+  @ValidateNested({ each: true })
+  @Type(() => DataDto)
+  data: DataDto[];
+};

@@ -41,3 +41,16 @@ export class ExamRecordDataDto
   @Type(() => AnswerItemDto)
   answer: AnswerItemDto[];
 }
+
+class refineDataDto
+{
+  @IsString()
+  workbookId: string;
+};
+
+export class SearchDetailRecordDto
+{
+  @ValidateNested({ each: true })
+  @Type(() => refineDataDto)
+  refineData: refineDataDto;
+}

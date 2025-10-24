@@ -1,7 +1,6 @@
 import { BadRequestException, Injectable, InternalServerErrorException, Logger, NotFoundException } from "@nestjs/common";
 import { InjectRepository } from "@nestjs/typeorm";
-import { DataSource, MoreThan, Raw, Repository } from "typeorm";
-import * as path from "path";
+import { DataSource, Repository } from "typeorm";
 import * as fs from "fs";
 import { Multer } from 'multer';
 import { join } from "path";
@@ -11,14 +10,15 @@ import { unlink } from "fs/promises";
 
 import { Workbook } from './workbooks.entity';
 import { Academy } from '../academy/academy.entity';
+
 import { FirebaseService } from '../firebase/firebase.service';
-import { UploadBookDto, DownLoadBookDto } from '../dto/workbook.dto';
-import { DeleteAcademyCheckedDto } from '../dto/multiChecked.dto';
-import { UpdateBookPaidDto } from '../dto/updateWorkbookPaid.dto';
-import { decryptionBookDto } from "../dto/return.dto";
 import { decryptionAES256GCM, encryptAES256GCM } from "../utils/encryption.service";
 import { EventLogsService } from "../eventlogs/eventlogs.service";
+
 import { RawLogInfoDto } from "../dto/log.dto";
+import { UploadBookDto, DownLoadBookDto, UpdateBookPaidDto } from '../dto/workbook.dto';
+import { DeleteAcademyCheckedDto } from '../dto/multiChecked.dto';
+import { decryptionBookDto } from "../dto/return.dto";
 
 @Injectable()
 export class WorkbookService {

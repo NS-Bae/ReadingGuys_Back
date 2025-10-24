@@ -10,8 +10,7 @@ import { Records } from './records.entity';
 import { decryptionAES256GCM, encryptAES256GCM } from '../utils/encryption.service';
 import { EventLogsService } from "../eventlogs/eventlogs.service";
 
-import { SearchDetailRecordDto } from '../dto/searchOneWorkbookOneStudent.dto';
-import { ExamRecordDataDto } from '../dto/examRecord.dto';
+import { ExamRecordDataDto, SearchDetailRecordDto } from '../dto/examRecord.dto';
 import { ReadFileParamsDto } from '../dto/readFile.dto';
 import { decryptionDto1, decryptionDto2 } from '../dto/return.dto';
 import { RawLogInfoDto } from '../dto/log.dto';

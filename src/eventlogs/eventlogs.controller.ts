@@ -7,6 +7,4 @@ export class EventLogsController
   constructor(
     private readonly eventLogsService: EventLogsService
   ) {}
-
-
 }

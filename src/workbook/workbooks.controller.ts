@@ -6,12 +6,12 @@ import { Multer } from "multer";
 import { WorkbookService } from './workbooks.service';
 import { multerConfig } from './multer.config';
 
-import { UploadBookDto, DownLoadBookDto } from '../dto/workbook.dto';
+import { UploadBookDto, DownLoadBookDto, UpdateBookPaidDto } from '../dto/workbook.dto';
 import { DeleteAcademyCheckedDto } from '../dto/multiChecked.dto';
-import { UpdateBookPaidDto } from '../dto/updateWorkbookPaid.dto';
 import { RawLogInfoDto } from '../dto/log.dto';
 
 import { CurrentUser } from '../auth/decorators/currentUser.decorator';
+import { DeviceInfo } from '../auth/decorators/deviceInfo.decorator';
 
 @Controller('workbook')
 export class WorkbookController {
@@ -32,10 +32,11 @@ export class WorkbookController {
     const workbooks = await this.workbookService.getWorkbookTotalList();
     return workbooks;
   }
-  //책 다운로드
+  //책 다운로드(only mobile)
   @Post('download')
   async downloadBook(
     @CurrentUser('hashedUserId') data: string,
+    @DeviceInfo() { deviceInfo },
     @Body() bookData : DownLoadBookDto,
     @Req() req: any,
     @Res() res : Response)
@@ -44,10 +45,9 @@ export class WorkbookController {
     {
       throw new BadRequestException('정보가 올바르지 않습니다.');
     }
-    const userAgent = req.get('user-agent');
     const rawInfo: RawLogInfoDto = {
       rawInfo: {
-        deviceInfo: userAgent,
+        deviceInfo: deviceInfo,
         IPA: req.clientIp,
       }
     };

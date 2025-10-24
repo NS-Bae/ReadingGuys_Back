@@ -5,8 +5,7 @@ import { DeviceInfo } from "../auth/decorators/deviceInfo.decorator";
 
 import { CurrentUser } from '../auth/decorators/currentUser.decorator';
 
-import { SearchDetailRecordDto } from '../dto/searchOneWorkbookOneStudent.dto';
-import { ExamRecordDataDto } from "../dto/examRecord.dto";
+import { ExamRecordDataDto, SearchDetailRecordDto } from "../dto/examRecord.dto";
 import { ReadFileParamsDto } from "../dto/readFile.dto";
 import { RawLogInfoDto } from "../dto/log.dto";
 import { OneStudentDto } from "../dto/other.dto";
@@ -40,7 +39,6 @@ export class RecordsController {
     @CurrentUser([ 'hashedUserId', 'hashedAcademyId' ]) hashedData: any,
     @Body() examRecordData: ExamRecordDataDto)
   {
-    console.log(hashedData);
     const rawInfo: RawLogInfoDto = {
       rawInfo: {
         deviceInfo: deviceInfo,
