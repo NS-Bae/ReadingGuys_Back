@@ -6,13 +6,13 @@ import { Workbook } from '../workbook/workbooks.entity';
 @Entity('ExamRecords')
 export class Records {
   @PrimaryColumn({ type: 'varchar', length: 255 })
-  hashedAcademyID: string;
+  hashedAcademyId: string;
 
   @PrimaryColumn({ type: 'varchar', length: 20 })
-  hashedUserID: string;
+  hashedUserId: string;
 
   @PrimaryColumn({ type: 'int' })
-  workbookID: number;
+  workbookId: number;
 
   @PrimaryColumn({ type: 'datetime' })
   examDate: Date;
@@ -20,7 +20,7 @@ export class Records {
   @Column({ type: 'decimal', precision: 5, scale: 2 })
   progressRate: number;
 
-  @Column({ type: 'varbinary', length: 255 })
+  @Column({ type: 'varbinary', length: 1024 })
   encryptedRecordLink: Buffer;
 
   @Column({ type: 'varbinary', length: 12 })
@@ -31,7 +31,7 @@ export class Records {
 
   // 관계 설정
   @ManyToOne(() => Academy, (academy) => academy.examRecords)
-  @JoinColumn({ name: 'hashedAcademyID', referencedColumnName: 'hashedAcademyId' })
+  @JoinColumn({ name: 'hashedAcademyId', referencedColumnName: 'hashedAcademyId' })
   academy: Academy;
 
   @ManyToOne(() => User, (user) => user.examRecords)

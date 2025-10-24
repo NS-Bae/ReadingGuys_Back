@@ -203,7 +203,7 @@ export class RecordsService {
     const payload = examRecordData;
     const device = rawInfo.rawInfo.deviceInfo;
     const ia = rawInfo.rawInfo.IPA;
-
+    
     const kstSubmitTime = this.toKST(examRecordData.submitDate);
     const logCommonData = this.refineDto(hashedUser, device, ia);
 
@@ -240,11 +240,11 @@ export class RecordsService {
     {
       await this.dataSource.transaction(async (manager) => {
         const record = manager.create(Records, {
-          hashedAcademyID: hashedAcademy,
-          hashedUserID: hashedUser,
-          WorkbookID: payload.workbook,
-          ExamDate: new Date(payload.submitDate),
-          ProgressRate: Number(payload.correctCount.toFixed(2)),
+          hashedAcademyId: hashedAcademy,
+          hashedUserId: hashedUser,
+          workbookId: payload.workbook,
+          examDate: new Date(payload.submitDate),
+          progressRate: Number(payload.correctCount.toFixed(2)),
           encryptedRecordLink: Buffer.from(encryptFilePath.encryptedData, 'hex'),//s3FileUrl
           ivRecordLink: Buffer.from(encryptFilePath.iv, 'hex'),
           authTagRecordLink: Buffer.from(encryptFilePath.authTag, 'hex'),
