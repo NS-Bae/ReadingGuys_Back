@@ -308,7 +308,7 @@ export class UsersService {
         rawAcademyName: decryptionAES256GCM(item.academy.encryptedAcademyName, item.academy.ivAcademyName, item.academy.authTagAcademyName),
         userType: item.userType,
         ok: item.ok,
-      }))
+      }));
 
       return refineUsers;
     }
@@ -318,30 +318,50 @@ export class UsersService {
     }
   }
 
-  /*
-  async update(id: string, userData: Partial<User>): Promise<User>
+  async findMyInfo(aid: string, uid: string): Promise<decryptionUserDetailDto>
   {
-    await this.usersRepository.update(id, userData);
-    return this.findOne(id);
-  } 
+    try
+    {
+      const rawUser = await this.usersRepository
+        .createQueryBuilder('user')
+        .leftJoinAndSelect('user.academy', 'academy')
+        .where('user.hashedUserId=:Puid', { Puid: uid })
+        .where('user.hashedAcademyId=:Paid', { Paid: aid })
+        .select([
+          'user.hashedUserId',
+          'user.hashedAcademyId',
+          'user.encryptedUserId',
+          'user.ivUserId',
+          'user.authTagUserId',
+          'user.encryptedUserName',
+          'user.ivUserName',
+          'user.authTagUserName',
+          'user.userType',
+          'user.ok',
+          'academy.encryptedAcademyName',
+          'academy.ivAcademyName',
+          'academy.authTagAcademyName',
+        ]) 
+        .getOne();
 
-  async remove(hashedUserId: string): Promise<void>
-  {
-    await this.usersRepository.delete(hashedUserId);
+      console.log(rawUser);
+
+      const refineUser: decryptionUserDetailDto = {
+        hashedUserId: rawUser.hashedUserId,
+        rawUserId: decryptionAES256GCM(rawUser.encryptedUserId, rawUser.ivUserId, rawUser.authTagUserId),
+        rawUserName: decryptionAES256GCM(rawUser.encryptedUserName, rawUser.ivUserName, rawUser.authTagUserName),
+        hashedAcademyId: rawUser.hashedAcademyId,
+        rawAcademyName: decryptionAES256GCM(rawUser.academy.encryptedAcademyName, rawUser.academy.ivAcademyName, rawUser.academy.authTagAcademyName),
+        userType: rawUser.userType,
+        ok: rawUser.ok,
+      };
+
+      return refineUser;
+    }
+    catch(error)
+    {
+      console.error('❌ DB 조회 에러 상세:', error);
+      throw new InternalServerErrorException('조회 중 오류가 발생했습니다.');
+    }
   }
-
-  async findAcademy(id: string)
-  {
-    const userAcademyId = await this.usersRepository
-      .createQueryBuilder('user')
-      .leftJoinAndSelect('user.academy', 'academy')
-      .select([
-        "academy.hashedAcademyId",
-      ])
-      .where('user.hashedUserId = :id', { id: id })
-      .getRawOne();
-
-    return userAcademyId;
-  }
-  */
 }

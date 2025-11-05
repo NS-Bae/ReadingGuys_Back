@@ -17,16 +17,6 @@ export class UsersController {
   async findAll(): Promise<decryptionUserDetailDto[]> {
     return this.usersService.findAll();
   }
-  /*
-  @Get(':id')
-  findOne(@Param('id') id: string): Promise<User> {
-    return this.usersService.findOne(id);
-  }
-
-  @Put(':id')
-  update(@Param('id') id: string, @Body() userData: Partial<User>): Promise<User> {
-    return this.usersService.update(id, userData);
-  } */
   
   @Post('adddata')
   async regist(@CurrentUser('hashedUserId') hashedData: string, @Req() req: any, @Body() registUserDto: AddNewUserDto)
@@ -71,5 +61,14 @@ export class UsersController {
       }
     };
     return this.usersService.deleteUsers(payload.hashedUserId, deleteCheckedDto, rawInfo);
+  }
+
+  @Get('myinfo')
+  async getMyIfno(@CurrentUser() payload: any): Promise<decryptionUserDetailDto>
+  {
+    const uid = payload.hashedUserId;
+    const aid = payload.hashedAcademyId;
+    console.log('controller', payload, aid, uid);
+    return this.usersService.findMyInfo(aid, uid);
   }
 }

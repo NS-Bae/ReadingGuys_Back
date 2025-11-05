@@ -17,7 +17,7 @@ import { TermsAgreement } from '../agreement/agreement.entity';
 
 @Entity('Users') // 테이블 이름을 Users로 설정
 export class User {
-  @PrimaryColumn({ type: 'varchar', length: 20 })
+  @PrimaryColumn({ name: 'HashedUserID', type: 'varchar', length: 20 })
   hashedUserId: string;
 
   @Column({ type: 'varbinary', length: 255, nullable: false })
