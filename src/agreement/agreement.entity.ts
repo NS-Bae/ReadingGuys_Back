@@ -1,20 +1,21 @@
-import { Column, Entity, JoinColumn, ManyToOne, PrimaryGeneratedColumn } from "typeorm";
+import { Column, Entity, Index, JoinColumn, ManyToOne, PrimaryGeneratedColumn } from "typeorm";
 import { TermsTypes } from "../others/other.types";
-import { User } from "src/users/users.entity";
+import { User } from "../users/users.entity";
 
 
 @Entity( 'TermsAgreement' )
+@Index('idx_user_terms', ['hashedUserId', 'termsType'])
 export class TermsAgreement {
   @PrimaryGeneratedColumn({ type: 'bigint' })
-  id: string;
+  id: number;
 
   @Column({ type: 'varchar', length: 255, nullable: false })
   hashedUserId: string;
 
   @Column({ type: 'enum', enum: TermsTypes, nullable: false })
-  termTypes: TermsTypes;
+  termsType: TermsTypes;
 
-  @Column({ type: 'varchar', length: 10, nullable: false })
+  @Column({ type: 'varchar', length: 20, nullable: false })
   version: string;
 
   @Column({ type: 'boolean', nullable: false })
