@@ -48,5 +48,12 @@ export enum EventType {
 
 export enum TermsTypes {
   이용약관 = 'service',
-  개인정보 = 'privacy'
+  개인정보 = 'privacy',
+  크레딧 = 'credits',
+  사업자정보 = 'about',
+}
+
+export enum TermsStatus {
+  활성화 = 'ACTIVE',
+  비활성화 = 'INACTIVE',
 }
