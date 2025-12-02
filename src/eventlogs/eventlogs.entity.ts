@@ -2,7 +2,7 @@ import { Column, Entity, PrimaryGeneratedColumn } from "typeorm";
 import { EventType } from "../others/other.types";
 
 
-@Entity( 'EventLogs' )
+@Entity( 'eventlogs' )
 export class EventLogs {
   @PrimaryGeneratedColumn({ name: 'Id', type: 'bigint' })
   id: string;

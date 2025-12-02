@@ -15,21 +15,21 @@ import { Records } from '../record/records.entity';
 import { UserType } from '../others/other.types';
 import { TermsAgreement } from '../agreement/agreement.entity';
 
-@Entity('Users') // 테이블 이름을 Users로 설정
+@Entity('users') // 테이블 이름을 Users로 설정
 export class User {
   @PrimaryColumn({ name: 'HashedUserID', type: 'varchar', length: 20 })
   hashedUserId: string;
 
-  @Column({ type: 'varbinary', length: 255, nullable: false })
+  @Column({ name: 'EncryptedUserID', type: 'varbinary', length: 255, nullable: false })
   encryptedUserId: Buffer;
 
-  @Column({ type: 'varbinary', length: 12, nullable: false })
+  @Column({ name: 'IVUserID', type: 'varbinary', length: 12, nullable: false })
   ivUserId: Buffer;
 
-  @Column({ type: 'varbinary', length: 16, nullable: false })
+  @Column({ name: 'AuthTagUserId', type: 'varbinary', length: 16, nullable: false })
   authTagUserId: Buffer;
 
-  @Column({ type: 'varchar', length: 255, nullable: false })
+  @Column({ name: 'Password', type: 'varchar', length: 255, nullable: false })
   password: string;
 
   @BeforeInsert()
@@ -42,26 +42,27 @@ export class User {
     }
   }
 
-  @Column({ type: 'varbinary', length: 255, nullable: false })
+  @Column({ name: 'EncryptedUserName', type: 'varbinary', length: 255, nullable: false })
   encryptedUserName: Buffer;
 
-  @Column({ type: 'varbinary', length: 12, nullable: false })
+  @Column({ name: 'IVUserName', type: 'varbinary', length: 12, nullable: false })
   ivUserName: Buffer;
 
-  @Column({ type: 'varbinary', length: 16, nullable: false })
+  @Column({ name: 'AuthTagUserName', type: 'varbinary', length: 16, nullable: false })
   authTagUserName: Buffer;
 
-  @Column({ type: 'varchar', length: 255, nullable: false })
+  @Column({ name: 'HashedAcademyID', type: 'varchar', length: 255, nullable: false })
   hashedAcademyId: string;
 
   @Column({
+    name: 'UserType',
     type: 'enum',
     enum: UserType,
     nullable: false,
   })
   userType: UserType;
 
-  @Column({ type: 'boolean', nullable: false })
+  @Column({ name: 'Ok', type: 'boolean', nullable: false })
   ok: boolean;
   
   //관계설정
@@ -72,6 +73,6 @@ export class User {
   termsAgreements: TermsAgreement[];
 
   @ManyToOne(() => Academy, (academy) => academy.users , { onDelete: 'CASCADE' })
-  @JoinColumn({ name: 'hashedAcademyId', referencedColumnName: 'hashedAcademyId' })
+  @JoinColumn({ name: 'HashedAcademyID', referencedColumnName: 'hashedAcademyId' })
   academy: Academy;
 }

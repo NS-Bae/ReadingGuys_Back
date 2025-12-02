@@ -5,25 +5,25 @@ import { User } from "src/users/users.entity";
 
 @Entity( 'TermsAgreement' )
 export class TermsAgreement {
-  @PrimaryGeneratedColumn({ type: 'bigint' })
+  @PrimaryGeneratedColumn({ name: 'ID', type: 'bigint' })
   id: string;
 
-  @Column({ type: 'varchar', length: 255, nullable: false })
+  @Column({ name: 'HashedUserID', type: 'varchar', length: 255, nullable: false })
   hashedUserId: string;
 
-  @Column({ type: 'enum', enum: TermsTypes, nullable: false })
+  @Column({ name: 'TermsType', type: 'enum', enum: TermsTypes, nullable: false })
   termTypes: TermsTypes;
 
-  @Column({ type: 'varchar', length: 10, nullable: false })
+  @Column({ name: 'Version', type: 'varchar', length: 10, nullable: false })
   version: string;
 
-  @Column({ type: 'boolean', nullable: false })
+  @Column({ name: 'Agreed', type: 'boolean', nullable: false })
   agreed: boolean
 
-  @Column({ type: 'timestamp', nullable: false, default: () => 'CURRENT_TIMESTAMP' })
+  @Column({ name: 'AgreedAt', type: 'timestamp', nullable: false, default: () => 'CURRENT_TIMESTAMP' })
   agreedAt: Date;
 
   @ManyToOne(() => User, (user) => user.termsAgreements)
-  @JoinColumn({ name: 'hashedUserId', referencedColumnName: 'hashedUserId' })
+  @JoinColumn({ name: 'HashedUserID', referencedColumnName: 'hashedUserId' })
   user: User;
 }

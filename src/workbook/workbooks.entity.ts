@@ -2,34 +2,35 @@ import { Entity, Column, PrimaryColumn, OneToMany, PrimaryGeneratedColumn } from
 import { Records } from '../record/records.entity';
 import { Difficulty } from '../others/other.types';
 
-@Entity( 'Workbooks' )
+@Entity( 'workbooks' )
 export class Workbook {
-  @PrimaryGeneratedColumn()
+  @PrimaryGeneratedColumn({ name: 'WorkbookID' })
   workbookId: number;
 
-  @Column({ type: 'boolean', nullable: false })
+  @Column({ name: 'IsPaid', type: 'boolean', nullable: false })
   isPaid: boolean;
 
   @Column({
+    name: 'Difficulty',
     type: 'enum',
     enum: Difficulty,
     nullable: false,
   })
   Difficulty: Difficulty;
 
-  @Column({ type: 'varchar', length: 255, nullable: false })
+  @Column({ name: 'WorkbookName', type: 'varchar', length: 255, nullable: false })
   workbookName: string;
 
-  @Column({ type: 'date', nullable: false })
+  @Column({ name: 'ReleaseMonth', type: 'date', nullable: false })
   releaseMonth: Date;
 
-  @Column({ type: 'varbinary', length: 255, nullable: false })
+  @Column({ name: 'EncryptedStorageLink', type: 'varbinary', length: 255, nullable: false })
   encryptedStorageLink: Buffer;
 
-  @Column({ type: 'varbinary', length: 12, nullable: false })
+  @Column({ name: 'IVStorageLink', type: 'varbinary', length: 12, nullable: false })
   ivStorageLink: Buffer;
 
-  @Column({ type: 'varbinary', length: 16, nullable: false })
+  @Column({ name: 'AuthTagStorageLink', type: 'varbinary', length: 16, nullable: false })
   authTagStorageLink: Buffer;
 
   @OneToMany(() => Records, (examRecord) => examRecord.workbook)

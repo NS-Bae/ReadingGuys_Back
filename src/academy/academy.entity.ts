@@ -2,27 +2,27 @@ import { Entity, Column, PrimaryColumn, OneToMany } from 'typeorm';
 import { Records } from '../record/records.entity';
 import { User } from '../users/users.entity';
 
-@Entity( 'Academy' ) // 테이블 이름을 Academy로 설정
+@Entity( 'academy' ) // 테이블 이름을 Academy로 설정
 export class Academy {
-  @PrimaryColumn({ type: 'varchar', length: 255 })
+  @PrimaryColumn({ name: 'HashedAcademyID', type: 'varchar', length: 255 })
   hashedAcademyId: string;
 
-  @Column({ type: 'varbinary', length: 255, nullable: false })
+  @Column({ name: 'EncryptedAcademyName', type: 'varbinary', length: 255, nullable: false })
   encryptedAcademyName: Buffer;
 
-  @Column({ type: 'varbinary', length: 12, nullable: false })
+  @Column({ name: 'IVAcademyName', type: 'varbinary', length: 12, nullable: false })
   ivAcademyName: Buffer;
 
-  @Column({ type: 'varbinary', length: 16, nullable: false })
+  @Column({ name: 'AuthTagAcademyName', type: 'varbinary', length: 16, nullable: false })
   authTagAcademyName: Buffer;
 
-  @Column({ type: 'boolean', nullable: false })
+  @Column({ name: 'PaymentStatus', type: 'boolean', nullable: false })
   paymentStatus: boolean;
 
-  @Column({ type: 'date', nullable: false })
+  @Column({ name: 'StartMonth', type: 'date', nullable: false })
   startMonth: Date;
 
-  @Column({ type: 'date', nullable: false })
+  @Column({ name: 'EndMonth', type: 'date', nullable: false })
   endMonth: Date;
 
   @OneToMany(() => Records, (examRecord) => examRecord.academy)

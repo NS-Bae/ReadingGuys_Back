@@ -3,42 +3,42 @@ import { Academy } from '../academy/academy.entity';
 import { User } from '../users/users.entity';
 import { Workbook } from '../workbook/workbooks.entity';
 
-@Entity('ExamRecords')
+@Entity('examrecords')
 export class Records {
-  @PrimaryColumn({ type: 'varchar', length: 255 })
+  @PrimaryColumn({ name: 'HashedAcademyId', type: 'varchar', length: 255 })
   hashedAcademyId: string;
 
-  @PrimaryColumn({ type: 'varchar', length: 20 })
+  @PrimaryColumn({ name: 'HashedUserId', type: 'varchar', length: 20 })
   hashedUserId: string;
 
-  @PrimaryColumn({ type: 'int' })
+  @PrimaryColumn({ name: 'WorkbookId', type: 'int' })
   workbookId: number;
 
-  @PrimaryColumn({ type: 'datetime' })
+  @PrimaryColumn({ name: 'ExamDate', type: 'datetime' })
   examDate: Date;
 
-  @Column({ type: 'decimal', precision: 5, scale: 2 })
+  @Column({ name: 'ProgressRate', type: 'decimal', precision: 5, scale: 2 })
   progressRate: number;
 
-  @Column({ type: 'varbinary', length: 1024 })
+  @Column({ name: 'EncryptedRecordLink', type: 'varbinary', length: 1024 })
   encryptedRecordLink: Buffer;
 
-  @Column({ type: 'varbinary', length: 12 })
+  @Column({ name: 'IVRecordLink', type: 'varbinary', length: 12 })
   ivRecordLink: Buffer;
 
-  @Column({ type: 'varbinary', length: 16 })
+  @Column({ name: 'AuthTagRecordLink', type: 'varbinary', length: 16 })
   authTagRecordLink: Buffer;
 
   // 관계 설정
   @ManyToOne(() => Academy, (academy) => academy.examRecords)
-  @JoinColumn({ name: 'hashedAcademyId', referencedColumnName: 'hashedAcademyId' })
+  @JoinColumn({ name: 'HashedAcademyId', referencedColumnName: 'hashedAcademyId' })
   academy: Academy;
 
   @ManyToOne(() => User, (user) => user.examRecords)
-  @JoinColumn({ name: 'hashedUserId', referencedColumnName: 'hashedUserId' })
+  @JoinColumn({ name: 'HashedUserId', referencedColumnName: 'hashedUserId' })
   user: User;
 
   @ManyToOne(() => Workbook, (workbook) => workbook.examRecords)
-  @JoinColumn({ name: 'workbookId', referencedColumnName: 'workbookId' })
+  @JoinColumn({ name: 'WorkbookId', referencedColumnName: 'workbookId' })
   workbook: Workbook;
 }
