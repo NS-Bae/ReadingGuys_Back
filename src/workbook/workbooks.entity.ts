@@ -24,7 +24,7 @@ export class Workbook {
   @Column({ name: 'ReleaseMonth', type: 'date', nullable: false })
   releaseMonth: Date;
 
-  @Column({ name: 'EncryptedStorageLink', type: 'varbinary', length: 255, nullable: false })
+  @Column({ name: 'EncryptedStorageLink', type: 'varbinary', length: 1024, nullable: false })
   encryptedStorageLink: Buffer;
 
   @Column({ name: 'IVStorageLink', type: 'varbinary', length: 12, nullable: false })

@@ -6,24 +6,31 @@ import { Multer } from "multer";
 @Injectable()
 export class AwsS3Service {
   private s3: S3;
+  private readonly bucketName: string;
 
   constructor(private readonly configService: ConfigService) {
     this.s3 = new S3({
-      accessKeyId: this.configService.get<string>("AWS_ACCESS_KEY_ID"),
-      secretAccessKey: this.configService.get<string>("AWS_SECRET_ACCESS_KEY"),
-      region: this.configService.get<string>("AWS_REGION"),
+      accessKeyId: this.configService.get<string>("AWS_S3_ACCESS_KEY"),
+      secretAccessKey: this.configService.get<string>("AWS_S3_SECRET_KEY"),
+      region: this.configService.get<string>("AWS_S3_REGION"),
+      endpoint: this.configService.get<string>("AWS_S3_ENDPOINT"),
+      s3ForcePathStyle: true,
+      signatureVersion: 'v4',
     });
+    this.bucketName = this.configService.get<string>("AWS_S3_BUCKET_NAME");
   }
 
   async uploadFile(file: Multer.File): Promise<string> {
     const uploadParams: S3.PutObjectRequest = {
-      Bucket: this.configService.get<string>("AWS_S3_BUCKET_NAME"),
+      Bucket: this.bucketName,
       Key: `workbooks/${Date.now()}-${file.originalname}`,
       Body: file.buffer,
       ContentType: file.mimetype,
     };
 
     const result = await this.s3.upload(uploadParams).promise();
+
+    console.log('qqq', result);
     return result.Location; // 업로드된 파일의 URL 반환
   }
 }

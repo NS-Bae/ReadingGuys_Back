@@ -14,6 +14,7 @@ import { Academy } from '../academy/academy.entity';
 import { FirebaseService } from '../firebase/firebase.service';
 import { decryptionAES256GCM, encryptAES256GCM } from "../utils/encryption.service";
 import { EventLogsService } from "../eventlogs/eventlogs.service";
+import { AwsS3Service } from "./aws-s3.service";
 
 import { RawLogInfoDto } from "../dto/log.dto";
 import { UploadBookDto, DownLoadBookDto, UpdateBookPaidDto } from '../dto/workbook.dto';
@@ -31,7 +32,7 @@ export class WorkbookService {
     private readonly firebaseService : FirebaseService,
     private readonly eventLogsService: EventLogsService,
     private dataSource: DataSource,
-    /* private readonly awsS3Service: AwsS3Service, */
+    private readonly awsS3Service: AwsS3Service,
   ) {}
 
   refineDto(data1: string, data2: string, data3: string)
@@ -120,7 +121,7 @@ export class WorkbookService {
 
     return filePath;
   }
-  //workbook upload push alert NOTYET
+  //workbook upload push alert NOT YET
   async uploadWorkbook(data)
   {
     const userDeviceToken = 'test';
@@ -132,7 +133,7 @@ export class WorkbookService {
   //workbook upload(local)(aws s3대응준비 완료)
   async uploadWorkbookFile(data: UploadBookDto, hashedData: string, rawInfo: RawLogInfoDto, file: Multer.file)
   {
-    let filePath = null;
+    let fileUrl = null;
     const device = rawInfo.rawInfo.deviceInfo;
     const ia = rawInfo.rawInfo.IPA;
 
@@ -143,17 +144,14 @@ export class WorkbookService {
       throw new BadRequestException('업로드할 파일이 없습니다.');
     }
 
-    filePath = join(process.cwd(), "uploads", file.filename);
-
-    /* // AWS S3로 업로드
-    let fileUrl = null;
-    if (file) {
-      fileUrl = await this.awsS3Service.uploadFile(file);
-      console.log("📂 AWS S3 업로드 완료:", fileUrl);
-    } */
     try
     {
-      const encryptedData = encryptAES256GCM(filePath);
+      if(file)
+      {
+        fileUrl = await this.awsS3Service.uploadFile(file);
+        console.log("📂 AWS S3 업로드 완료:", fileUrl);
+      }
+      const encryptedData = encryptAES256GCM(fileUrl);
       const newWorkbook = {
         releaseMonth: data.releaseMonth,
         workbookName: data.workbookName,

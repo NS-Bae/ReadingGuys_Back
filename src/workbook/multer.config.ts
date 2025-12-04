@@ -1,8 +1,8 @@
-import { diskStorage } from "multer";
+import { memoryStorage } from "multer";
 import { extname } from "path";
 
 export const multerConfig = {
-  storage: diskStorage({
+  storage: memoryStorage({
     destination: "./uploads",
     filename: (req, file, cb) => {
       const uniqueSuffix = Date.now() + "-" + Math.round(Math.random() * 1e9);

@@ -13,7 +13,7 @@ export class TermsAgreement {
   hashedUserId: string;
 
   @Column({ name: 'TermsType', type: 'enum', enum: TermsTypes, nullable: false })
-  termTypes: TermsTypes;
+  termsType: TermsTypes;
 
   @Column({ name: 'Version', type: 'varchar', length: 10, nullable: false })
   version: string;
