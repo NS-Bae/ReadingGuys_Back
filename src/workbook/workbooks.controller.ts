@@ -38,8 +38,8 @@ export class WorkbookController {
     @CurrentUser('hashedUserId') data: string,
     @DeviceInfo() { deviceInfo },
     @Body() bookData : DownLoadBookDto,
-    @Req() req: any,
-    @Res() res : Response)
+    @Req() req: any
+  )
   {
     if(!bookData)
     {
@@ -52,14 +52,14 @@ export class WorkbookController {
       }
     };
     const bookLink = await this.workbookService.getWorkbookDownload(data, bookData, rawInfo);
-    res.setHeader('Content-Disposition', `attachment; filename="${encodeURIComponent(bookLink)}"`);
-    res.sendFile(bookLink);
+
+    return { url: bookLink };
   }
   //책 업로드
   @Post('adddata')
   @UseInterceptors(FileInterceptor("file", multerConfig))
   async uploadBook(
-    @CurrentUser('hashedUserId') hashedData: string, 
+    @CurrentUser('hashedUserId') hashedData: string,
     @Req() req: any,
     @Body() data: UploadBookDto,
     @UploadedFile() file: Multer.File

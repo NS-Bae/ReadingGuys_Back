@@ -1,9 +1,7 @@
 import { BadRequestException, Injectable, InternalServerErrorException, Logger, NotFoundException } from "@nestjs/common";
 import { InjectRepository } from "@nestjs/typeorm";
 import { DataSource, Repository } from "typeorm";
-import * as fs from "fs";
 import { Multer } from 'multer';
-import { join } from "path";
 
 /* import { AwsS3Service } from "./aws-s3.service"; */ // 서버 구동시 활성화
 import { unlink } from "fs/promises";
@@ -112,14 +110,10 @@ export class WorkbookService {
 
     const filePath = decryptionAES256GCM(RawFilePath.encryptedStorageLink, RawFilePath.ivStorageLink, RawFilePath.authTagStorageLink);
 
-    if(!fs.existsSync(filePath))
-    {
-      await this.eventLogsService.createBusinessLog({ log : {...logCommonData, data4: '교재다운로드실패'} });
-      throw new Error('파일을 찾을 수 없습니다.');
-    }
     await this.eventLogsService.createBusinessLog({ log : {...logCommonData, data4: '교재다운로드'} });
 
-    return filePath;
+    const signedPath = await this.awsS3Service.getSignedDownloadUrl(filePath);
+    return signedPath;
   }
   //workbook upload push alert NOT YET
   async uploadWorkbook(data)
@@ -130,7 +124,7 @@ export class WorkbookService {
 
     await this.firebaseService.sendNotification(userDeviceToken, title, body);
   }
-  //workbook upload(local)(aws s3대응준비 완료)
+  //workbook upload
   async uploadWorkbookFile(data: UploadBookDto, hashedData: string, rawInfo: RawLogInfoDto, file: Multer.file)
   {
     let fileUrl = null;
@@ -149,7 +143,6 @@ export class WorkbookService {
       if(file)
       {
         fileUrl = await this.awsS3Service.uploadFile(file);
-        console.log("📂 AWS S3 업로드 완료:", fileUrl);
       }
       const encryptedData = encryptAES256GCM(fileUrl);
       const newWorkbook = {
@@ -204,7 +197,6 @@ export class WorkbookService {
 
       if(rawWorkbooks.length === 0)
       {
-        console.log('삭제할 문제집이 없습니다.');
         await queryRunner.rollbackTransaction();
         await this.eventLogsService.createBusinessLog({log: { ...logCommonData, data4: '교재삭제실패' }});
         return { deletedCount: 0 };
@@ -222,7 +214,6 @@ export class WorkbookService {
           try
           {
             await unlink(workbook.storageLink);
-            console.log(`📂 로컬 파일 삭제 완료`);
           }
           catch(error)
           {

@@ -21,9 +21,11 @@ export class AwsS3Service {
   }
 
   async uploadFile(file: Multer.File): Promise<string> {
+    const conversionName = Buffer.from(file.originalname, 'latin1').toString('utf8');
+
     const uploadParams: S3.PutObjectRequest = {
       Bucket: this.bucketName,
-      Key: `workbooks/${Date.now()}-${file.originalname}`,
+      Key: `workbooks/${Date.now()}-${conversionName}`,
       Body: file.buffer,
       ContentType: file.mimetype,
     };
@@ -31,6 +33,15 @@ export class AwsS3Service {
     const result = await this.s3.upload(uploadParams).promise();
 
     console.log('qqq', result);
-    return result.Location; // 업로드된 파일의 URL 반환
+    return result.Key; // 업로드된 파일의 URL 반환
+  }
+
+  async getSignedDownloadUrl(key: string)
+  {
+    return this.s3.getSignedUrl('getObject', {
+      Bucket: this.bucketName,
+      Key: key,
+      Expires: 60,
+    });
   }
 }
