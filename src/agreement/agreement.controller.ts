@@ -4,7 +4,7 @@ import { FileInterceptor } from "@nestjs/platform-express";
 import { Multer } from "multer";
 
 import { CurrentUser } from "src/auth/decorators/currentUser.decorator";
-import { multerConfig } from "src/workbook/multer.config";
+import { multerConfig } from "src/utils/multer.config";
 
 @Controller('agreement')
 export class TermsAgreementController

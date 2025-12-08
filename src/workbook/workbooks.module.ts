@@ -7,7 +7,7 @@ import { Academy } from '../academy/academy.entity';
 import { FirebaseService } from '../firebase/firebase.service';
 import { FirebaseModule } from '../firebase/firebase.module';
 import { EventLogsModule } from '../eventlogs/eventlogs.module';
-import { AwsS3Service } from './aws-s3.service';
+import { AwsS3Service } from '../utils/aws-s3.service';
 
 @Module({
   imports: [TypeOrmModule.forFeature([Workbook, Academy]), FirebaseModule, EventLogsModule],

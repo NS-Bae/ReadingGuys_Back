@@ -4,7 +4,7 @@ import { FileInterceptor } from '@nestjs/platform-express';
 import { Multer } from "multer";
 
 import { WorkbookService } from './workbooks.service';
-import { multerConfig } from './multer.config';
+import { multerConfig } from '../utils/multer.config';
 
 import { UploadBookDto, DownLoadBookDto, UpdateBookPaidDto } from '../dto/workbook.dto';
 import { DeleteAcademyCheckedDto } from '../dto/multiChecked.dto';

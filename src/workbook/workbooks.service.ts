@@ -3,16 +3,13 @@ import { InjectRepository } from "@nestjs/typeorm";
 import { DataSource, Repository } from "typeorm";
 import { Multer } from 'multer';
 
-/* import { AwsS3Service } from "./aws-s3.service"; */ // 서버 구동시 활성화
-import { unlink } from "fs/promises";
-
 import { Workbook } from './workbooks.entity';
 import { Academy } from '../academy/academy.entity';
 
 import { FirebaseService } from '../firebase/firebase.service';
 import { decryptionAES256GCM, encryptAES256GCM } from "../utils/encryption.service";
 import { EventLogsService } from "../eventlogs/eventlogs.service";
-import { AwsS3Service } from "./aws-s3.service";
+import { AwsS3Service } from "../utils/aws-s3.service";
 
 import { RawLogInfoDto } from "../dto/log.dto";
 import { UploadBookDto, DownLoadBookDto, UpdateBookPaidDto } from '../dto/workbook.dto';
@@ -208,22 +205,8 @@ export class WorkbookService {
       //저장소에 저장된 workbook삭제
       for(const workbook of WorkBooks)
       {
-        //로컬(배포시 삭제)
-        if(workbook.storageLink)
-        {
-          try
-          {
-            await unlink(workbook.storageLink);
-          }
-          catch(error)
-          {
-            console.error(`❌ 로컬 파일 삭제 실패: ${workbook.storageLink}`, error);
-            await this.eventLogsService.createBusinessLog({log: { ...logCommonData, data4: '교재삭제실패' }});
-            throw new InternalServerErrorException('파일 삭제 중 오류 발생');
-          }
-        }
         //aws s3용 배포시 활성화
-        /* if(workbook.storageLink)
+        if(workbook.storageLink)
         {
           try
           {
@@ -235,7 +218,7 @@ export class WorkbookService {
             console.error('❌ 파일 삭제 실패', error);
             throw new InternalServerErrorException('AWS S3 파일 삭제 중 오류 발생');
           }
-        } */
+        }
       }
       const deleteResult = await queryRunner.manager
         .createQueryBuilder()

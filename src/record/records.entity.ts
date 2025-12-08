@@ -11,7 +11,7 @@ export class Records {
   @PrimaryColumn({ name: 'HashedUserId', type: 'varchar', length: 20 })
   hashedUserId: string;
 
-  @PrimaryColumn({ name: 'WorkbookId', type: 'int' })
+  @Column({ name: 'WorkbookId', type: 'int', nullable: true })
   workbookId: number;
 
   @PrimaryColumn({ name: 'ExamDate', type: 'datetime' })
@@ -38,7 +38,10 @@ export class Records {
   @JoinColumn({ name: 'HashedUserId', referencedColumnName: 'hashedUserId' })
   user: User;
 
-  @ManyToOne(() => Workbook, (workbook) => workbook.examRecords)
+  @ManyToOne(() => Workbook, (workbook) => workbook.examRecords, {
+    nullable: true,
+    onDelete: 'SET NULL',
+  })
   @JoinColumn({ name: 'WorkbookId', referencedColumnName: 'workbookId' })
-  workbook: Workbook;
+  workbook?: Workbook | null;
 }

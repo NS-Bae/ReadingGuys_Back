@@ -32,7 +32,6 @@ export class AwsS3Service {
 
     const result = await this.s3.upload(uploadParams).promise();
 
-    console.log('qqq', result);
     return result.Key; // 업로드된 파일의 URL 반환
   }
 
@@ -43,5 +42,14 @@ export class AwsS3Service {
       Key: key,
       Expires: 60,
     });
+  }
+
+  async deleteFile(key: string): Promise<void>
+  {
+    await this.s3.deleteObject({
+      Bucket: this.bucketName,
+      Key: key,
+    })
+    .promise();
   }
 }
