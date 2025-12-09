@@ -248,14 +248,7 @@ export class RecordsService {
   async readRecordJsonFile(readFileParams: ReadFileParamsDto)
   {
     const link = readFileParams.readFileParams.recordLink;
-    if(fs.existsSync(link))
-    {
-      const content = fs.readFileSync(link, 'utf-8');
-      return JSON.parse(content);
-    }
-    else
-    {
-      return { error: 'File not found' };
-    }
+    const json = await this.s3Service.readJson(link);
+    return json;
   }
 }

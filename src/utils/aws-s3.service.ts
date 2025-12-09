@@ -67,4 +67,28 @@ export class AwsS3Service {
     })
     .promise();
   }
+
+  async readJson( key: string ): Promise<any> {
+    const params = {
+      Bucket: this.bucketName,
+      Key: key,
+    };
+
+    try
+    {
+      const data = await this.s3.getObject(params).promise();
+      if(!data.Body)
+      {
+        throw new Error('S3 파일이 비어있습니다.');
+      }
+
+      const jsonString = data.Body.toString('utf-8');
+      return JSON.parse(jsonString);
+    }
+    catch(error)
+    {
+      console.error('S3 JSON 읽기 실패:', error);
+      throw error;
+    }
+  }
 }
