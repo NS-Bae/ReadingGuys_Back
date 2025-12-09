@@ -9,13 +9,13 @@ import { Records } from './records.entity';
 
 import { decryptionAES256GCM, encryptAES256GCM } from '../utils/encryption.service';
 import { EventLogsService } from "../eventlogs/eventlogs.service";
+import { AwsS3Service } from "../utils/aws-s3.service";
 
 import { ExamRecordDataDto, SearchDetailRecordDto } from '../dto/examRecord.dto';
 import { ReadFileParamsDto } from '../dto/readFile.dto';
 import { decryptionDto1, decryptionDto2 } from '../dto/return.dto';
 import { RawLogInfoDto } from '../dto/log.dto';
-/* import { S3Service } from '../aws/s3.service';
- */
+
 @Injectable()
 export class RecordsService {
   private readonly logger = new Logger(RecordsService.name);
@@ -24,8 +24,8 @@ export class RecordsService {
     private recordsRepository: Repository<Records>,
     private readonly eventLogsService: EventLogsService,
     private dataSource: DataSource,
-/*     private s3Service: S3Service,
- */  ) {}
+    private s3Service: AwsS3Service,
+  ) {}
 
   private toKST(dateString: string)
   {
@@ -93,8 +93,8 @@ export class RecordsService {
       }));
 
       return decryptionRefineData;
-    } 
-    catch (error) 
+    }
+    catch (error)
     {
       console.error('쿼리 실행 중 오류 발생:', error);
       throw new InternalServerErrorException('데이터를 불러오는 중 오류가 발생했습니다.');
@@ -207,34 +207,13 @@ export class RecordsService {
     const kstSubmitTime = this.toKST(examRecordData.submitDate);
     const logCommonData = this.refineDto(hashedUser, device, ia);
 
-    const baseDir = path.join(process.cwd(), 'records');
-    if(!fs.existsSync(baseDir))
-    {
-      fs.mkdirSync(baseDir, { recursive: true });
-    }
-    //학원폴더 검증
-    const academyFolder = path.join(baseDir, hashedAcademy);
-    if(!fs.existsSync(academyFolder))
-    {
-      fs.mkdirSync(academyFolder, { recursive: true });
-    }
-    //사용자 폴더 검증
-    const userFolder = path.join(academyFolder, hashedUser)
-    if(!fs.existsSync(userFolder))
-    {
-      fs.mkdirSync(userFolder, { recursive: true })
-    }
-    //파일 생성
     const fileName = `${hashedAcademy}_${hashedUser}_${kstSubmitTime}.json`;
-    const filePath = path.join(userFolder, fileName);
+    const key = `records/${hashedAcademy}/${hashedUser}/${fileName}`;
 
-    //저장(LOCAL)
-    fs.writeFileSync(filePath, JSON.stringify(examRecordData, null, 2));
     //저장(AWS)
-    /* const s3Key = `records/${hashedAcademy}/${hashedUser}/${fileName}`;
-    const s3FileUrl = await this.s3Service.uploadRecordFile(filePath, s3Key); */
+    const result = await this.s3Service.uploadRecord(examRecordData, key);
 
-    const encryptFilePath = encryptAES256GCM(filePath);
+    const encryptFilePath = encryptAES256GCM(result);
     //DB
     try
     {
@@ -256,7 +235,7 @@ export class RecordsService {
       });
       await this.eventLogsService.createBusinessLog({log: { ...logCommonData, data4: '결과저장' }});
 
-      return { message: '시험 결과 저장 완료', filePath };
+      return { message: '시험 결과 저장 완료', result };
     }
     catch(error)
     {

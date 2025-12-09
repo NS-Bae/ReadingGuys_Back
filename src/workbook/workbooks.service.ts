@@ -125,6 +125,7 @@ export class WorkbookService {
   async uploadWorkbookFile(data: UploadBookDto, hashedData: string, rawInfo: RawLogInfoDto, file: Multer.file)
   {
     let fileUrl = null;
+    const tag = 'workbooks';
     const device = rawInfo.rawInfo.deviceInfo;
     const ia = rawInfo.rawInfo.IPA;
 
@@ -139,7 +140,7 @@ export class WorkbookService {
     {
       if(file)
       {
-        fileUrl = await this.awsS3Service.uploadFile(file);
+        fileUrl = await this.awsS3Service.uploadFile(file, tag);
       }
       const encryptedData = encryptAES256GCM(fileUrl);
       const newWorkbook = {
