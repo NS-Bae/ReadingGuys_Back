@@ -1,10 +1,16 @@
-import { Injectable, Logger } from "@nestjs/common";
+import { Injectable, InternalServerErrorException, Logger } from "@nestjs/common";
 import { InjectRepository } from "@nestjs/typeorm";
 import { DataSource, Repository } from "typeorm";
 import { Multer } from 'multer';
 
 import { TermsAgreement } from "./agreement.entity";
 import { Terms } from "./terms.entity";
+
+import { AwsS3Service } from "../utils/aws-s3.service";
+import { decryptionAES256GCM, encryptAES256GCM } from '../utils/encryption.service';
+import { EventLogsService } from "../eventlogs/eventlogs.service";
+
+import { RawLogInfoDto } from '../dto/log.dto';
 
 @Injectable()
 export class TermsAgreementService
@@ -17,11 +23,63 @@ export class TermsAgreementService
     @InjectRepository(Terms)
     private termsRepository: Repository<Terms>,
     private dataSource: DataSource,
+    private s3Service: AwsS3Service,
+    private readonly eventLogsService: EventLogsService,
   ) {}
 
-  async uploadNewTermsFile(data: any, hashedData: string, file: Multer.file)
+  refineDto(data1: string, data2: string, data3: string)
   {
+    return {
+      data1: data1,
+      data2: data2,
+      data3: data3,
+    };
+  }
+  async uploadNewTermsFile(data: any, hashedData: string, rawInfo: RawLogInfoDto)
+  {
+    const category = data.main;
+    const contents = data.contents;
+    const device = rawInfo.rawInfo.deviceInfo;
+    const ia = rawInfo.rawInfo.IPA;
+    const time = new Date();
 
+    const logCommonData = this.refineDto(hashedData, device, ia);
+    const fileName = `${category}_${time}.md`;
+    const key = `coreDocuments/${category}/${fileName}`;
+
+    const result = await this.s3Service.uploadTerms(contents, key);
+    const encryptFilePath = encryptAES256GCM(result);
+
+    try
+    {
+      await this.dataSource.transaction(async (manager) => {
+          const term = manager.create(Terms, {
+            termsType: category,
+            title: fileName,
+            encryptedStorageLink: Buffer.from(encryptFilePath.encryptedData, 'hex'),
+            ivStorageLink: Buffer.from(encryptFilePath.iv, 'hex'),
+            authTagStorageLink: Buffer.from(encryptFilePath.authTag, 'hex'),
+            effectiveDate: time,//테스트
+            createdBy: hashedData,
+            createdAt: time,
+        });
+        
+        const saveRecord = await manager.save(term);
+
+        return saveRecord;
+      });
+
+      await this.eventLogsService.createBusinessLog({log: { ...logCommonData, data4: '결과저장' }});
+
+      return { message: '시험 결과 저장 완료', result };
+    }
+    catch(error)
+    {
+      console.error('DB 저장 오류:', error);
+      await this.eventLogsService.createBusinessLog({log: { ...logCommonData, data4: '결과저장실패' }});
+      throw new InternalServerErrorException('시험 결과 DB 저장 실패');
+    }
+    console.log(key);
   }
 
   async getLatestTerm(data: any)

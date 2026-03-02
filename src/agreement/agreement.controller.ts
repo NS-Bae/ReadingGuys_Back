@@ -3,8 +3,11 @@ import { TermsAgreementService } from "./agreement.service";
 import { FileInterceptor } from "@nestjs/platform-express";
 import { Multer } from "multer";
 
-import { CurrentUser } from "src/auth/decorators/currentUser.decorator";
-import { multerConfig } from "src/utils/multer.config";
+import { CurrentUser } from "../auth/decorators/currentUser.decorator";
+import { multerConfig } from "../utils/multer.config";
+import { DeviceInfo } from "../auth/decorators/deviceInfo.decorator";
+
+import { RawLogInfoDto } from "../dto/log.dto";
 
 @Controller('agreement')
 export class TermsAgreementController
@@ -14,18 +17,23 @@ export class TermsAgreementController
   ) {}
 
   @Post('adddata')
-  @UseInterceptors(FileInterceptor("file", multerConfig))
   async uploadTerms(
-    @CurrentUser('hashedUserId') hashedData: string, 
     @Req() req: any,
+    @CurrentUser('hashedUserId') hashedData: string,
     @Body() data: any,
-    @UploadedFile() file: Multer.File
     )
   {
-    return this.termsAgreementService.uploadNewTermsFile(data, hashedData, file);
+    const userAgent = req.get('user-agent');
+    const rawInfo: RawLogInfoDto = {
+      rawInfo: {
+        deviceInfo: userAgent,
+        IPA: req.clientIp,
+      }
+    };
+    return this.termsAgreementService.uploadNewTermsFile(data, hashedData, rawInfo);
   }
 
-  @Get('latest')
+  @Get('list')
   async getLatestTerms(data: any)
   {
     return this.termsAgreementService.getLatestTerm(data);

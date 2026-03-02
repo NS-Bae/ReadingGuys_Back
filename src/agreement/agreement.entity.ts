@@ -3,7 +3,7 @@ import { TermsTypes } from "../others/other.types";
 import { User } from "../users/users.entity";
 
 
-@Entity( 'TermsAgreement' )
+@Entity( 'termsagreement' )
 @Index('idx_user_terms', ['hashedUserId', 'termsType'])
 export class TermsAgreement {
   @PrimaryGeneratedColumn({ name: 'ID', type: 'bigint' })

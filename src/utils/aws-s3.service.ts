@@ -20,7 +20,8 @@ export class AwsS3Service {
     this.bucketName = this.configService.get<string>("AWS_S3_BUCKET_NAME");
   }
 
-  async uploadFile(file: Multer.File, tag: string): Promise<string> {
+  async uploadFile(file: Multer.File, tag: string): Promise<string>
+  {
     const conversionName = Buffer.from(file.originalname, 'latin1').toString('utf8');
 
     const uploadParams: S3.PutObjectRequest = {
@@ -35,7 +36,21 @@ export class AwsS3Service {
     return result.Key;
   }
 
-  async uploadRecord(data: any, key: string): Promise<string> {
+  async uploadTerms(data: any, key: string): Promise<string>
+  {
+    const uploadParams: S3.PutObjectRequest = {
+      Bucket: this.bucketName,
+      Key: key,
+      Body: data,
+    };
+
+    const result = await this.s3.upload(uploadParams).promise();
+    
+    return result.Key;
+  }
+
+  async uploadRecord(data: any, key: string): Promise<string>
+  {
     const convertData = JSON.stringify(data, null, 2);
 
     const uploadParams: S3.PutObjectRequest = {
