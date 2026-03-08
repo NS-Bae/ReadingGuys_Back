@@ -1,10 +1,11 @@
 import { Injectable, InternalServerErrorException, Logger } from "@nestjs/common";
 import { InjectRepository } from "@nestjs/typeorm";
-import { DataSource, Repository } from "typeorm";
+import { DataSource, In, Repository } from "typeorm";
 import { Multer } from 'multer';
 
 import { TermsAgreement } from "./agreement.entity";
 import { Terms } from "./terms.entity";
+import { User } from '../users/users.entity';
 
 import { AwsS3Service } from "../utils/aws-s3.service";
 import { decryptionAES256GCM, encryptAES256GCM } from '../utils/encryption.service';
@@ -22,6 +23,8 @@ export class TermsAgreementService
     private termsAgreementRepository: Repository<TermsAgreement>,
     @InjectRepository(Terms)
     private termsRepository: Repository<Terms>,
+    @InjectRepository(User)
+    private userRepository: Repository<User>,
     private dataSource: DataSource,
     private s3Service: AwsS3Service,
     private readonly eventLogsService: EventLogsService,
@@ -82,9 +85,46 @@ export class TermsAgreementService
     console.log(key);
   }
 
-  async getLatestTerm(data: any)
+  async getAllTerms(data: string)
   {
+    const terms = await this.termsRepository
+      .createQueryBuilder('terms')
+      .where('terms.termsType = :type', { type: data })
+      .orderBy('terms.createdAt', 'DESC')
+      .getMany();
 
+    const createdByHashes = [...new Set(terms.map(term => term.createdBy))];
+
+    const users = await this.userRepository.find({
+      where: {
+        hashedUserId: In(createdByHashes),
+      }
+    });
+
+    const userMap = new Map();
+
+    for(const user of users)
+    {
+      const userID = decryptionAES256GCM(
+        user.encryptedUserId,
+        user.ivUserId,
+        user.authTagUserId,
+      );
+
+      userMap.set(user.hashedUserId, userID);
+    }
+
+    const result = terms.map(term => ({
+      id: term.id,
+      title: term.title,
+      termsType: term.termsType,
+      status: term.status,
+      createdAt: term.createdAt,
+      effectiveDate: term.effectiveDate,
+      createdBy: userMap.get(term.createdBy) || '알 수 없음',
+    }));
+
+    return result;
   }
 
   async agreeTerm(data: any)

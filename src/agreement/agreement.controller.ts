@@ -1,4 +1,4 @@
-import { Body, Controller, Get, Post, Req, UploadedFile, UseInterceptors } from "@nestjs/common";
+import { Body, Controller, Get, Post, Query, Req, UploadedFile, UseInterceptors } from "@nestjs/common";
 import { TermsAgreementService } from "./agreement.service";
 import { FileInterceptor } from "@nestjs/platform-express";
 import { Multer } from "multer";
@@ -33,10 +33,10 @@ export class TermsAgreementController
     return this.termsAgreementService.uploadNewTermsFile(data, hashedData, rawInfo);
   }
 
-  @Get('list')
-  async getLatestTerms(data: any)
+  @Get('alllist')
+  async getLatestTerms(@Query('main') main: string)
   {
-    return this.termsAgreementService.getLatestTerm(data);
+    return this.termsAgreementService.getAllTerms(main);
   }
 
   @Post('agree_terms')
