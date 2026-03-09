@@ -26,7 +26,7 @@ import { APP_GUARD } from '@nestjs/core';
     TermsAgreementModule,
     EventLogsModule,
     ConfigModule.forRoot({
-      envFilePath: '.env',
+      envFilePath: process.env.NODE_ENV === 'production' ? '.env.production' : '.env',
       isGlobal: true,
     }),
     TypeOrmModule.forRoot({

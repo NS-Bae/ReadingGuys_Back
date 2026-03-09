@@ -181,14 +181,13 @@ export class TermsAgreementService
     }
   }
 
-  async readTermsService(data: UpdateTermsDto)
+  async readTermsService(title: string, nowId: string)
   {
-    const {type, id} = data.data;
-    const numericId = Number(id);
+    const numericId = Number(nowId);
 
     const terms = await this.termsRepository
       .createQueryBuilder('terms')
-      .where('terms.termsType = :type', { type: type })
+      .where('terms.termsType = :type', { type: title })
       .andWhere('terms.id = :id', { id: numericId })
       .getOne();
 
