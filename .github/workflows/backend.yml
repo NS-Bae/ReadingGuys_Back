@@ -2,30 +2,61 @@ name: ReadingGuys Backend CI
 
 on:
   push:
-    branches: [main]
-  pull_request:
+    branches: 
+      - main
 
 jobs:
-  build-and-test:
+  deploy:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v3
+      - name: 1. 코드 가져오기
+        uses: actions/checkout@v4
 
-      - name: Use Node.js
+      - name: 2. Node 설치
         uses: actions/setup-node@v4
-        with:
+        with: 
           node-version: 20
+          cache: npm
 
-      - name: Install dependencies
+      - name: 3. 의존성 설치
         run: npm ci
 
-      - name: Lint
-        run: npm run lint
+      - name: 4. 환경파일 생성
+        run: |
+          cat <<'EOF'> .env.production
+          ${{ secrets.BACKEND_ENV_PROD }}
+          EOF
 
-      - name: Build
+      - name: 5.빌드
         run: npm run build
 
-      - name: Test
-        run: npm run test
+      - name: 6. SSH 키 설정
+        run: |
+          mkdir -p ~/.ssh
+          echo "${{ secrets.LIGHTSAIL_SSH_KEY }}"> ~/.ssh/id_ed25519
+          chmod 600 ~/.ssh/id_ed25519
+          ssh-keyscan -H ${{ secrets.LIGHTSAIL_HOST }} >> ~/.ssh/known_hosts
+
+      - name: 7. 서버로 파일 업로드
+        run: |
+          rsync -avz --delete \
+            --exclude ".git" \
+            --exclude "node_modules" \
+            ./${{ secrets.LIGHTSAIL_USER }}@${{ secrets.LIGHTSAIL_HOST }}:/var/www/rgback/
+      
+      - name: 8.서버에서 배포 마무리
+        run: |
+          ssh ${{ secrets.LIGHTSAIL_USER }}@${{ secrets.LIGHTSAIL_HOST }} << 'EOF'
+            set -e
+            export NVM_DIR="$HOME/.nvm"
+            [ -s "$NVM_DIR/nvm.sh" ] && . "$NVM_DIR/nvm.sh"
+            nvm use 20
+
+            cd /var/www/rgback
+            npm ci
+            npm run build
+
+            pm2 restart rgback --update-env || pm2 start dist/main.js --name rgback
+            pm2 save
+          EOF
