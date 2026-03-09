@@ -57,6 +57,12 @@ export class TermsAgreementController
     return this.termsAgreementService.updateTermsState(data, hashedData, rawInfo);
   }
 
+  @Post('readterm')
+  async readTerms(@Body() data: UpdateTermsDto)
+  {
+    return this.termsAgreementService.readTermsService(data);
+  }
+
   @Post('agree_terms')
   async agreementToTerms(data: any)
   {

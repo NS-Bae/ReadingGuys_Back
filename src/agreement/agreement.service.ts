@@ -181,6 +181,29 @@ export class TermsAgreementService
     }
   }
 
+  async readTermsService(data: UpdateTermsDto)
+  {
+    const {type, id} = data.data;
+    const numericId = Number(id);
+
+    const terms = await this.termsRepository
+      .createQueryBuilder('terms')
+      .where('terms.termsType = :type', { type: type })
+      .andWhere('terms.id = :id', { id: numericId })
+      .getOne();
+
+    const termKey = decryptionAES256GCM( terms.encryptedStorageLink, terms.ivStorageLink, terms.authTagStorageLink );
+
+    const content = await this.s3Service.readTerms(termKey);
+    
+    return {
+      title: terms.title,
+      termsType: terms.termsType,
+      content,
+    };
+  }
+
+
   async agreeTerm(data: any)
   {
 

@@ -2,6 +2,7 @@ import { Injectable } from "@nestjs/common";
 import { S3 } from "aws-sdk";
 import { ConfigService } from "@nestjs/config";
 import { Multer } from "multer";
+import { CannotAttachTreeChildrenEntityError } from "typeorm";
 
 @Injectable()
 export class AwsS3Service {
@@ -45,7 +46,7 @@ export class AwsS3Service {
     };
 
     const result = await this.s3.upload(uploadParams).promise();
-    
+
     return result.Key;
   }
 
@@ -72,7 +73,7 @@ export class AwsS3Service {
       Key: key,
       Expires: 60,
     });
-  }
+  };
 
   async deleteFile(key: string): Promise<void>
   {
@@ -81,9 +82,10 @@ export class AwsS3Service {
       Key: key,
     })
     .promise();
-  }
+  };
 
-  async readJson( key: string ): Promise<any> {
+  async readJson( key: string ): Promise<any>
+  {
     const params = {
       Bucket: this.bucketName,
       Key: key,
@@ -103,6 +105,43 @@ export class AwsS3Service {
     catch(error)
     {
       console.error('S3 JSON 읽기 실패:', error);
+      throw error;
+    }
+  };
+
+  async readTerms(key: string): Promise<string>
+  {
+    const params: S3.GetObjectRequest = {
+      Bucket: this.bucketName,
+      Key: key,
+    };
+
+    try
+    {
+      const data = await this.s3.getObject(params).promise();
+
+      if(!data.Body)
+      {
+        throw new Error('S3파일이 비어있습니다.');
+      }
+      if(Buffer.isBuffer(data.Body))
+      {
+        return data.Body.toString('utf-8');
+      }
+      if(typeof data.Body === 'string')
+      {
+        return data.Body;
+      }
+      if(data.Body instanceof Uint8Array)
+      {
+        return Buffer.from(data.Body).toString('utf-8');
+      }
+
+      throw new Error('지원하지 않는 형식입니다.');
+    }
+    catch(error)
+    {
+      console.error('S3 파일 읽기 실패:', error);
       throw error;
     }
   }
