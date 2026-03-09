@@ -12,6 +12,8 @@ import { decryptionAES256GCM, encryptAES256GCM } from '../utils/encryption.servi
 import { EventLogsService } from "../eventlogs/eventlogs.service";
 
 import { RawLogInfoDto } from '../dto/log.dto';
+import { UpdateTermsDto } from "../dto/other.dto";
+import { TermsStatus, TermsTypes } from "../others/other.types";
 
 @Injectable()
 export class TermsAgreementService
@@ -125,6 +127,58 @@ export class TermsAgreementService
     }));
 
     return result;
+  }
+
+  async updateTermsState(data: UpdateTermsDto, hashedData: string, rawInfo: RawLogInfoDto)
+  {
+    const {type, id} = data.data;
+    const numericId = Number(id);
+    const queryRunner = this.dataSource.createQueryRunner();
+
+    await queryRunner.connect();
+    await queryRunner.startTransaction();
+
+    try
+    {
+      const target = await queryRunner.manager.findOne(Terms, {
+        where: { id: numericId, termsType: type },
+      });
+
+      if(!target)
+      {
+        throw new Error('약관을 찾을 수 없습니다.');
+      }
+      if(target.status === TermsStatus.활성화)
+      {
+        throw new Error('활성화된 약관을 비활성화 할 수 없습니다.');
+      }
+
+      await queryRunner.manager.update(
+        Terms,
+        { termsType: type },
+        { status: TermsStatus.비활성화 },
+      );
+      await queryRunner.manager.update(
+        Terms,
+        { id: numericId },
+        { status: TermsStatus.활성화, effectiveDate: new Date() },
+      );
+
+      await queryRunner.commitTransaction();
+
+      return { message: '약관이 활성화되었습니다.', id, type };
+    }
+    catch(error)
+    {
+      await queryRunner.rollbackTransaction();
+
+      console.error('약관 변경 실패', error);
+      throw error;
+    }
+    finally
+    {
+      await queryRunner.release();
+    }
   }
 
   async agreeTerm(data: any)

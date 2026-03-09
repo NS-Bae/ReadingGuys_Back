@@ -1,4 +1,4 @@
-import { UserType } from '../others/other.types';
+import { UserType, TermsTypes } from '../others/other.types';
 
 export class JWTPayloadDto
 {
@@ -11,4 +11,15 @@ export class JWTPayloadDto
 export class OneStudentDto 
 {
   data: string;
+}
+
+class UpdateTermsInnerDto
+{
+  type: TermsTypes;
+  id: string;
+}
+
+export class UpdateTermsDto
+{
+  data: UpdateTermsInnerDto;
 }

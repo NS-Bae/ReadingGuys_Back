@@ -8,6 +8,7 @@ import { multerConfig } from "../utils/multer.config";
 import { DeviceInfo } from "../auth/decorators/deviceInfo.decorator";
 
 import { RawLogInfoDto } from "../dto/log.dto";
+import { UpdateTermsDto } from "../dto/other.dto";
 
 @Controller('agreement')
 export class TermsAgreementController
@@ -37,6 +38,23 @@ export class TermsAgreementController
   async getLatestTerms(@Query('main') main: string)
   {
     return this.termsAgreementService.getAllTerms(main);
+  }
+
+  @Post('changedata')
+  async updateTerms(
+    @Req() req: any,
+    @CurrentUser('hashedUserId') hashedData: string,
+    @Body() data: UpdateTermsDto
+  )
+  {
+    const userAgent = req.get('user-agent');
+    const rawInfo: RawLogInfoDto = {
+      rawInfo: {
+        deviceInfo: userAgent,
+        IPA: req.clientIp,
+      }
+    };
+    return this.termsAgreementService.updateTermsState(data, hashedData, rawInfo);
   }
 
   @Post('agree_terms')
