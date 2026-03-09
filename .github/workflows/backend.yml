@@ -70,6 +70,6 @@ jobs:
             cd /var/www/rgback
             npm ci --omit=dev
 
-            pm2 restart rgback --update-env || pm2 start dist/main.js --name rgback
+            pm2 restart rgback --update-env || pm2 start dist/src/main.js --name rgback
             pm2 save
           EOF
