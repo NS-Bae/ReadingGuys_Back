@@ -8,8 +8,6 @@ on:
 jobs:
   deploy:
     runs-on: ubuntu-latest
-    env:
-      NODE_OPTIONS: --max-old-space-size=1024
 
     steps:
       - name: 1. 코드 가져오기
