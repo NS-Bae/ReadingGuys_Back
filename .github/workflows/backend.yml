@@ -34,7 +34,9 @@ jobs:
       - name: 6. SSH 키 설정
         run: |
           mkdir -p ~/.ssh
-          printf "%s" "${{ secrets.LIGHTSAIL_SSH_KEY }}"> ~/.ssh/id_ed25519
+          cat << 'EOF' > ~/.ssh/id_ed25519
+${{ secrets.LIGHTSAIL_SSH_KEY }}
+EOF
           chmod 600 ~/.ssh/id_ed25519
 
           printf "%s\n" "${{ secrets.LIGHTSAIL_KNOWN_HOSTS }}" > ~/.ssh/known_hosts
