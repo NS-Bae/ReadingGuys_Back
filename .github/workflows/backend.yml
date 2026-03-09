@@ -42,11 +42,13 @@ jobs:
 
       - name: 7. 서버로 파일 업로드
         run: |
+          RSYNC_RSH="ssh -i ~/.ssh/id_ed25519" \
           rsync -avz --delete \
-            -e "ssh -i ~/.ssh/id_ed25519" \
             --exclude ".git" \
             --exclude "node_modules" \
-            ./${{ secrets.LIGHTSAIL_USER }}@${{ secrets.LIGHTSAIL_HOST }}:/var/www/rgback/
+            --exclude ".github" \
+            ./ \
+            ${{ secrets.LIGHTSAIL_USER }}@${{ secrets.LIGHTSAIL_HOST }}:/var/www/rgback/
       
       - name: 8.서버에서 배포 마무리
         run: |
