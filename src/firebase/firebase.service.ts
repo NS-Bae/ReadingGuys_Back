@@ -1,48 +1,31 @@
-import * as admin from 'firebase-admin';
 import { Injectable, Logger } from '@nestjs/common';
-import * as dotenv from 'dotenv';
-
-dotenv.config();
-
-admin.initializeApp({
-  credential: admin.credential.cert(process.env.GOOGLE_APPLICATION_CREDENTIALS),
-});
+import * as admin from 'firebase-admin';
 
 @Injectable()
 export class FirebaseService {
   private readonly logger = new Logger(FirebaseService.name);
-  private readonly firebaseApp: admin.app.App;
 
-  constructor() {}
-  // FCM 푸시 알림 보내기
-  async sendPushNotification(fcmToken: string, message: string): Promise<void> {
-    try {
-      const messagePayload = {
-        token: fcmToken, // FCM 토큰
-        notification: {
-          title: '새로운 책이 업로드 되었습니다.',
-          body: message,
-        },
-      };
+  constructor() {
+    const useFirebase = process.env.USE_FIREBASE === 'true';
 
-      // FCM 서버로 푸시 알림 전송
-      const response = await admin.messaging().send(messagePayload);
-      console.log('푸시 알림 전송 성공:', response);
-    } 
-    catch (error) 
-    {
-      console.error('푸시 알림 전송 실패:', error);
-      throw new Error('FCM 푸시 알림 전송에 실패했습니다.');
+    if (!useFirebase) {
+      this.logger.warn('Firebase disabled by USE_FIREBASE=false');
+      return;
     }
-  }
 
-  async sendNotification(deviceToken: string, title: string, body: string) {
-    const message = {
-      token: deviceToken,
-      notification: {
-        title,
-        body,
-      },
+    // 나중에 Firebase 정상 설정되면 여기 다시 활성화
+    /*
+    const serviceAccount = {
+      projectId: process.env.FIREBASE_PROJECT_ID,
+      clientEmail: process.env.FIREBASE_CLIENT_EMAIL,
+      privateKey: process.env.FIREBASE_PRIVATE_KEY?.replace(/\\n/g, '\n'),
     };
+
+    if (!admin.apps.length) {
+      admin.initializeApp({
+        credential: admin.credential.cert(serviceAccount),
+      });
+    }
+    */
   }
 }

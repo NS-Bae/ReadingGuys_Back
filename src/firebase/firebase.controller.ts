@@ -5,7 +5,7 @@ import { FirebaseService } from './firebase.service';
 export class FirebaseController {
   constructor(private readonly firebaseService: FirebaseService) {}
 
-  @Post('tk')
+  /* @Post('tk')
   async sendPushNotification(@Body() body: { token: string, message: string }) {
     const { token, message } = body;
 
@@ -13,5 +13,5 @@ export class FirebaseController {
     await this.firebaseService.sendPushNotification(token, message);
 
     return { message: '푸시 알림이 전송되었습니다.' };
-  }
+  } */
 }
