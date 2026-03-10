@@ -19,8 +19,8 @@ import { APP_GUARD } from '@nestjs/core';
   imports: [
     AuthModule, 
     UsersModule,
-    WorkbooksModule,
-    FirebaseModule,
+    WorkbooksModule,/* 
+    FirebaseModule, */
     AcademyModule,
     RecordsModule,
     TermsAgreementModule,
