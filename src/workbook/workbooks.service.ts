@@ -65,6 +65,7 @@ export class WorkbookService {
         'workbook.workbookId',
         'workbook.workbookName',
         'workbook.Difficulty',
+        'workbook.WorkbookCategory',
       ])
       .getMany();
 
@@ -79,6 +80,7 @@ export class WorkbookService {
       workbookName: item.workbookName,
       isPaid: item.isPaid,
       Difficulty: item.Difficulty,
+      WorkbookCategory: item.WorkbookCategory,
       releaseMonth: item.releaseMonth,
       storageLink: decryptionAES256GCM(item.encryptedStorageLink, item.ivStorageLink, item.authTagStorageLink),
     }));
@@ -112,15 +114,7 @@ export class WorkbookService {
     const signedPath = await this.awsS3Service.getSignedDownloadUrl(filePath);
     return signedPath;
   }
-  //workbook upload push alert NOT YET
-  /* async uploadWorkbook(data)
-  {
-    const userDeviceToken = 'test';
-    const title = '새 문제집이 업로드되었습니다!';
-    const body = '문제집을 확인하려면 앱을 열어보세요.';
 
-    await this.firebaseService.sendNotification(userDeviceToken, title, body);
-  } */
   //workbook upload
   async uploadWorkbookFile(data: UploadBookDto, hashedData: string, rawInfo: RawLogInfoDto, file: Multer.file)
   {
@@ -147,6 +141,7 @@ export class WorkbookService {
         releaseMonth: data.releaseMonth,
         workbookName: data.workbookName,
         Difficulty: data.Difficulty,
+        WorkbookCategory: data.WorkbookCategory,
         isPaid: data.isPaid,
         encryptedStorageLink: Buffer.from(encryptedData.encryptedData, 'hex'),
         ivStorageLink: Buffer.from(encryptedData.iv, 'hex'),
