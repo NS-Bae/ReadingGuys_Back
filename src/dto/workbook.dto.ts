@@ -17,7 +17,7 @@ export class UploadBookDto
 
   @IsOptional()
   @IsEnum(WorkbookCategory)
-  WorkbookCategory: WorkbookCategory;
+  Category: WorkbookCategory;
 
   @IsBoolean()
   isPaid: boolean;
@@ -38,7 +38,7 @@ export class DownLoadBookDto
 
   @IsOptional()
   @IsEnum(WorkbookCategory)
-  WorkbookCategory: WorkbookCategory;
+  Category: WorkbookCategory;
 }
 
 class DataDto {
