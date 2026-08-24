@@ -1,6 +1,6 @@
-import { IsArray, IsBoolean, IsDate, IsEnum, IsString, ValidateNested } from "class-validator";
+import { IsArray, IsBoolean, IsDate, IsEnum, IsOptional, IsString, ValidateNested } from "class-validator";
 import { Transform, Type } from "class-transformer";
-import { Difficulty } from '../others/other.types';
+import { Difficulty, WorkbookCategory } from '../others/other.types';
 import { Multer } from "multer";
 
 export class UploadBookDto
@@ -14,6 +14,10 @@ export class UploadBookDto
 
   @IsEnum(Difficulty)
   Difficulty: Difficulty;
+
+  @IsOptional()
+  @IsEnum(WorkbookCategory)
+  WorkbookCategory: WorkbookCategory;
 
   @IsBoolean()
   isPaid: boolean;
@@ -31,6 +35,10 @@ export class DownLoadBookDto
 
   @IsEnum(Difficulty)
   Difficulty: Difficulty;
+
+  @IsOptional()
+  @IsEnum(WorkbookCategory)
+  WorkbookCategory: WorkbookCategory;
 }
 
 class DataDto {
