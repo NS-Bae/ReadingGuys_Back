@@ -1,6 +1,6 @@
 import { Entity, Column, PrimaryColumn, OneToMany, PrimaryGeneratedColumn } from 'typeorm';
 import { Records } from '../record/records.entity';
-import { Difficulty } from '../others/other.types';
+import { Difficulty, WorkbookCategory } from '../others/other.types';
 
 @Entity( 'workbooks' )
 export class Workbook {
@@ -17,6 +17,15 @@ export class Workbook {
     nullable: false,
   })
   Difficulty: Difficulty;
+
+  @Column({
+    name: 'WorkbookCategory',
+    type: 'enum',
+    enum: WorkbookCategory,
+    nullable: false,
+    default: WorkbookCategory.융합,
+  })
+  WorkbookCategory: WorkbookCategory;
 
   @Column({ name: 'WorkbookName', type: 'varchar', length: 255, nullable: false })
   workbookName: string;
