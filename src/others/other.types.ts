@@ -11,11 +11,11 @@ export enum Difficulty {
 }
 
 export enum WorkbookCategory {
-  인문철학 = 'humanities-philosophy',
-  사회문화 = 'social-culture',
-  과학기술 = 'science-technology',
-  예술체육 = 'arts-sports',
-  융합 = 'convergence',
+  인문철학 = '인문철학',
+  사회문화 = '사회문화',
+  과학기술 = '과학기술',
+  예술체육 = '예술체육',
+  융합 = '융합',
 }
 
 export enum EventType {
