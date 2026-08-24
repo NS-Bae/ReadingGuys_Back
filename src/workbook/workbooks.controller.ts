@@ -23,6 +23,7 @@ export class WorkbookController {
   async getWorkbookList(@CurrentUser('hashedAcademyId') data: string)
   {
     const workbooks = await this.workbookService.getWorkbookList(data);
+    console.log(workbooks);
     return workbooks;
   }
 
@@ -30,6 +31,7 @@ export class WorkbookController {
   async getTotalList()
   {
     const workbooks = await this.workbookService.getWorkbookTotalList();
+    console.log(workbooks);
     return workbooks;
   }
   //책 다운로드(only mobile)
