@@ -23,7 +23,7 @@ export class WorkbookController {
   async getWorkbookList(@CurrentUser('hashedAcademyId') data: string)
   {
     const workbooks = await this.workbookService.getWorkbookList(data);
-    console.log(workbooks);
+    console.log('qqqqqqqq', workbooks);
     return workbooks;
   }
 
