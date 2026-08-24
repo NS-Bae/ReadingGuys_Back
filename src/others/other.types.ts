@@ -5,9 +5,17 @@ export enum UserType {
 }
 
 export enum Difficulty {
-  쉬움 = 'easy',
-  보통 = 'normal',
-  어려움 = 'hard',
+  초급 = 'easy',
+  중급 = 'normal',
+  고급 = 'hard',
+}
+
+export enum WorkbookCategory {
+  인문철학 = 'humanities-philosophy',
+  사회문화 = 'social-culture',
+  과학기술 = 'science-technology',
+  예술체육 = 'arts-sports',
+  융합 = 'convergence',
 }
 
 export enum EventType {
