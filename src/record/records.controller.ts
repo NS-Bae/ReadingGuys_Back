@@ -45,7 +45,7 @@ export class RecordsController {
         IPA: req.clientIp,
       }
     };
-    console.log(examRecordData);
+    console.log('controller',examRecordData);
     return this.recordsService.saveOneStudentExamRecord(hashedData.hashedUserId, hashedData.hashedAcademyId, examRecordData, rawInfo);
   }
 

@@ -223,7 +223,7 @@ export class RecordsService {
     const result = await this.s3Service.uploadRecord(examRecordData, key);
 
     const encryptFilePath = encryptAES256GCM(result);
-    console.log(payload, {examRecordData});
+    console.log(payload);
     //DB
     try
     {
