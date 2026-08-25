@@ -187,6 +187,8 @@ export class RecordsService {
         }),
       }));
 
+      console.log('[test]',refineTimeRawData);
+
       const decryptionRefineData: decryptionDto2[] = refineTimeRawData.map(item => ({
         WorkbookName: item.WorkbookName,
         ExamDate: item.examDate,
