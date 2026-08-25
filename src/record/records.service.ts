@@ -72,6 +72,7 @@ export class RecordsService {
           "workbook.workbookName as WorkbookName",
           "records.ExamDate as ExamDate",
           "records.ProgressRate as ProgressRate",
+          "records.Rate as Rate",
         ])
         .where('academy.hashedAcademyId = :hashedAcademyId', { hashedAcademyId: data })
         .getRawMany();
@@ -121,6 +122,7 @@ export class RecordsService {
           "workbook.workbookName as WorkbookName",
           "records.ExamDate as ExamDate",
           "records.ProgressRate as ProgressRate",
+          "records.Rate as Rate",
         ])
         .where('academy.hashedAcademyId = :hashedAcademyId', { hashedAcademyId: hashedData })
         .andWhere('user.hashedUserId = :hashedUserId', {hashedUserId: data})
@@ -166,6 +168,7 @@ export class RecordsService {
           "workbook.workbookName as WorkbookName",
           "records.ExamDate as ExamDate",
           "records.ProgressRate as ProgressRate",
+          "records.Rate as Rate",
           "records.encryptedRecordLink as encryptedRecordLink",
           "records.ivRecordLink as ivRecordLink",
           "records.authTagRecordLink as authTagRecordLink",
@@ -214,6 +217,7 @@ export class RecordsService {
     const result = await this.s3Service.uploadRecord(examRecordData, key);
 
     const encryptFilePath = encryptAES256GCM(result);
+    console.log(payload, {examRecordData});
     //DB
     try
     {
