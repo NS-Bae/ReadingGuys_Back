@@ -206,6 +206,12 @@ export class RecordsService {
     const payload = examRecordData;
     const device = rawInfo.rawInfo.deviceInfo;
     const ia = rawInfo.rawInfo.IPA;
+
+    console.log('[SAVE_RECORD_ENTER]', {
+    workbook: examRecordData.workbook,
+    progressRate: examRecordData.progressRate,
+    rate: examRecordData.rate,
+  });
     
     const kstSubmitTime = this.toKST(examRecordData.submitDate);
     const logCommonData = this.refineDto(hashedUser, device, ia);
@@ -227,7 +233,7 @@ export class RecordsService {
           hashedUserId: hashedUser,
           workbookId: payload.workbook,
           examDate: new Date(payload.submitDate),
-          correctCount: payload.correctCount,
+          progressRate: payload.progressRate,
           rate: payload.rate,
           encryptedRecordLink: Buffer.from(encryptFilePath.encryptedData, 'hex'),//s3FileUrl
           ivRecordLink: Buffer.from(encryptFilePath.iv, 'hex'),

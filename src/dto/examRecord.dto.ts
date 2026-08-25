@@ -31,7 +31,7 @@ export class ExamRecordDataDto
 
   @IsNumber()
   @IsNotEmpty()
-  correctCount: number;
+  progressRate: number;
 
   @IsISO8601()
   @IsNotEmpty()
