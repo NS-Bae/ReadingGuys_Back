@@ -141,7 +141,7 @@ export class WorkbookService {
         releaseMonth: data.releaseMonth,
         workbookName: data.workbookName,
         Difficulty: data.Difficulty,
-        WorkbookCategory: data.WorkbookCategory,
+        WorkbookCategory: data.Category,
         isPaid: data.isPaid,
         encryptedStorageLink: Buffer.from(encryptedData.encryptedData, 'hex'),
         ivStorageLink: Buffer.from(encryptedData.iv, 'hex'),
