@@ -40,6 +40,10 @@ export class ExamRecordDataDto
   @ValidateNested({ each: true })
   @Type(() => AnswerItemDto)
   answer: AnswerItemDto[];
+
+  @IsNumber()
+  @IsNotEmpty()
+  rate: number;
 }
 
 class refineDataDto
