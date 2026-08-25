@@ -20,7 +20,7 @@ export class Records {
   @Column({ name: 'ProgressRate', type: 'int' })
   progressRate: number;
 
-  @Column({ name: 'ProgressRate', type: 'int' })
+  @Column({ name: 'Rate', type: 'int' })
   rate: number;
 
   @Column({ name: 'EncryptedRecordLink', type: 'varbinary', length: 1024 })
