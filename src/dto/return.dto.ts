@@ -1,4 +1,4 @@
-import { Difficulty, UserType } from "../others/other.types";
+import { Difficulty, UserType, WorkbookCategory } from "../others/other.types";
 
 export class decryptionAcademyDto
 {
@@ -38,6 +38,7 @@ export class decryptionDto1
   WorkbookName: string;
   ExamDate: Date;
   ProgressRate: number;
+  Rate: number;
 }
 
 export class decryptionDto2
@@ -45,6 +46,7 @@ export class decryptionDto2
   WorkbookName: string;
   ExamDate: Date;
   ProgressRate: number;
+  Rate: number;
   RecordLink: string;
 }
 
@@ -53,5 +55,6 @@ export class decryptionBookDto
   workbookId: number;
   workbookName: string;
   Difficulty: Difficulty;
+  WorkbookCategory: WorkbookCategory;
   storageLink: string;
 }

@@ -91,6 +91,7 @@ export class RecordsService {
         WorkbookName: item.WorkbookName,
         ExamDate: item.examDate,
         ProgressRate: item.ProgressRate,
+        Rate: item.Rate,
       }));
 
       return decryptionRefineData;
@@ -142,6 +143,7 @@ export class RecordsService {
         WorkbookName: item.WorkbookName,
         ExamDate: item.examDate,
         ProgressRate: item.ProgressRate,
+        Rate: item.Rate,
       }));
 
       return decryptionRefineData;
@@ -189,6 +191,7 @@ export class RecordsService {
         WorkbookName: item.WorkbookName,
         ExamDate: item.examDate,
         ProgressRate: item.ProgressRate,
+        Rate: item.Rate,
         RecordLink: decryptionAES256GCM(item.encryptedRecordLink, item.ivRecordLink, item.authTagRecordLink), 
       }));
 
