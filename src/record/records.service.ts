@@ -223,7 +223,7 @@ export class RecordsService {
           hashedUserId: hashedUser,
           workbookId: payload.workbook,
           examDate: new Date(payload.submitDate),
-          progressRate: Number(payload.correctCount.toFixed(2)),
+          correctCount: payload.correctCount,
           encryptedRecordLink: Buffer.from(encryptFilePath.encryptedData, 'hex'),//s3FileUrl
           ivRecordLink: Buffer.from(encryptFilePath.iv, 'hex'),
           authTagRecordLink: Buffer.from(encryptFilePath.authTag, 'hex'),

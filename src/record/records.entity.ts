@@ -17,7 +17,7 @@ export class Records {
   @PrimaryColumn({ name: 'ExamDate', type: 'datetime' })
   examDate: Date;
 
-  @Column({ name: 'ProgressRate', type: 'decimal', precision: 5, scale: 2 })
+  @Column({ name: 'ProgressRate', type: 'int' })
   progressRate: number;
 
   @Column({ name: 'EncryptedRecordLink', type: 'varbinary', length: 1024 })
