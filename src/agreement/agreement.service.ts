@@ -108,6 +108,8 @@ export class TermsAgreementService
       throw new NotFoundException('현재 활성화된 약관이 없습니다.');
     }
 
+    console.log('test', document);
+
     return document;
   }
 
