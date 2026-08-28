@@ -1,6 +1,9 @@
-import { Controller, Post, Body } from '@nestjs/common';
+import { Controller, Post, Body, UseGuards } from '@nestjs/common';
 import { FirebaseService } from './firebase.service';
+import { CurrentUser } from '../auth/decorators/currentUser.decorator';
+import { RegisterFcmTokenDto } from '../dto/other.dto';
 
+@UseGuards(JwtAuthGuard)
 @Controller('fb')
 export class FirebaseController {
   constructor(private readonly firebaseService: FirebaseService) {}
@@ -14,4 +17,15 @@ export class FirebaseController {
 
     return { message: '푸시 알림이 전송되었습니다.' };
   } */
+  @Post('tk')
+  async registerToken(
+    @CurrentUser('hashedUserId')
+    hashedUserId: string,
+    @Body()
+    dto: RegisterFcmTokenDto,
+  )
+  {
+    await this.firebaseService.registerToken(hashedUserId, dto.token );
+    return { ok: true, message: 'FCM 기기 토큰 등록 완료' };
+  }
 }

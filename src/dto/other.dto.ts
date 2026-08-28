@@ -1,4 +1,4 @@
-import { IsBoolean, IsEnum } from 'class-validator';
+import { IsBoolean, IsEnum, IsNotEmpty, IsString, MaxLength } from 'class-validator';
 import { UserType, TermsTypes } from '../others/other.types';
 
 export class JWTPayloadDto
@@ -9,7 +9,7 @@ export class JWTPayloadDto
   ok: boolean;
 }
 
-export class OneStudentDto 
+export class OneStudentDto
 {
   data: string;
 }
@@ -32,4 +32,12 @@ export class TermsAgreementDto
 
   @IsBoolean()
   agreed: boolean;
+}
+
+export class RegisterFcmTokenDto
+{
+  @IsString()
+  @IsNotEmpty()
+  @MaxLength(512)
+  token: string;
 }
