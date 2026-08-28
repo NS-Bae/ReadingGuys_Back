@@ -1,6 +1,6 @@
-import { Injectable, InternalServerErrorException, Logger } from "@nestjs/common";
+import { Injectable, InternalServerErrorException, Logger, NotFoundException } from "@nestjs/common";
 import { InjectRepository } from "@nestjs/typeorm";
-import { DataSource, In, Repository } from "typeorm";
+import { DataSource, In, LessThanOrEqual, Repository } from "typeorm";
 import { Multer } from 'multer';
 
 import { TermsAgreement } from "./agreement.entity";
@@ -14,6 +14,7 @@ import { EventLogsService } from "../eventlogs/eventlogs.service";
 import { RawLogInfoDto } from '../dto/log.dto';
 import { UpdateTermsDto } from "../dto/other.dto";
 import { TermsStatus, TermsTypes } from "../others/other.types";
+import { TermDataParamsDto } from "src/dto/readFile.dto";
 
 @Injectable()
 export class TermsAgreementService
@@ -87,51 +88,53 @@ export class TermsAgreementService
     console.log(key);
   }
 
-  async getAllTerms(data: string)
+  //DB조회
+  async findCurrentActiveDocument(type: TermsTypes)
   {
-    const terms = await this.termsRepository
-      .createQueryBuilder('terms')
-      .where('terms.termsType = :type', { type: data })
-      .orderBy('terms.createdAt', 'DESC')
-      .getMany();
-
-    const createdByHashes = [...new Set(terms.map(term => term.createdBy))];
-
-    const users = await this.userRepository.find({
+    const document = await this.termsRepository.findOne({
       where: {
-        hashedUserId: In(createdByHashes),
-      }
+        termsType: type,
+        status: TermsStatus.활성화,
+        effectiveDate: LessThanOrEqual(new Date()),
+      },
+      order: {
+        effectiveDate: 'DESC',
+        id: 'DESC',
+      },
     });
 
-    const userMap = new Map();
-
-    for(const user of users)
+    if(!document)
     {
-      const userID = decryptionAES256GCM(
-        user.encryptedUserId,
-        user.ivUserId,
-        user.authTagUserId,
-      );
-
-      userMap.set(user.hashedUserId, userID);
+      throw new NotFoundException('현재 활성화된 약관이 없습니다.');
     }
 
-    const result = terms.map(term => ({
-      id: term.id,
-      title: term.title,
-      termsType: term.termsType,
-      status: term.status,
-      createdAt: term.createdAt,
-      effectiveDate: term.effectiveDate,
-      createdBy: userMap.get(term.createdBy) || '알 수 없음',
-    }));
+    return document;
+  }
 
-    return result;
+  //조회된 약관 데이터 읽기
+  async getCurrentActiveDocument(type: TermsTypes)
+  {
+    const rawDocument = await this.findCurrentActiveDocument(type);
+    const key = decryptionAES256GCM( rawDocument.encryptedStorageLink, rawDocument.ivStorageLink, rawDocument.authTagStorageLink );
+    const content = await this.s3Service.readTerms(key);
+    const refineDocument: TermDataParamsDto = {
+      id: rawDocument.id,
+      termsType: rawDocument.termsType,
+      title: rawDocument.title,
+      Version: rawDocument.Version,
+      effectiveDate: rawDocument.effectiveDate,
+      status: rawDocument.status,
+      createdBy: rawDocument.createdBy,
+      createdAt: rawDocument.createdAt,
+      content: content,
+    }
+
+    return refineDocument;
   }
 
   async updateTermsState(data: UpdateTermsDto, hashedData: string, rawInfo: RawLogInfoDto)
   {
-    const {type, id} = data.data;
+    const { type, id } = data.data;
     const numericId = Number(id);
     const queryRunner = this.dataSource.createQueryRunner();
 
@@ -181,31 +184,26 @@ export class TermsAgreementService
     }
   }
 
-  async readTermsService(title: string, nowId: string)
+  async agreeTerm(hashedData: string, type: TermsTypes, agreed: boolean, rawInfo: RawLogInfoDto)
   {
-    const numericId = Number(nowId);
+    const currentDocument = await this.findCurrentActiveDocument(type);
+    const findExisting = await this.termsAgreementRepository.findOne({
+      where: {
+        hashedUserId: hashedData,
+        termsType: type,
+        version: currentDocument.Version,
+      },
+    });
 
-    const terms = await this.termsRepository
-      .createQueryBuilder('terms')
-      .where('terms.termsType = :type', { type: title })
-      .andWhere('terms.id = :id', { id: numericId })
-      .getOne();
+    const agreement = findExisting ?? this.termsAgreementRepository.create({
+      hashedUserId: hashedData,
+      termsType: type,
+      version: currentDocument.Version,
+    });
+    agreement.agreed = agreed;
+    agreement.agreedAt = new Date();
 
-    const termKey = decryptionAES256GCM( terms.encryptedStorageLink, terms.ivStorageLink, terms.authTagStorageLink );
-
-    const content = await this.s3Service.readTerms(termKey);
-    
-    return {
-      title: terms.title,
-      termsType: terms.termsType,
-      content,
-    };
-  }
-
-
-  async agreeTerm(data: any)
-  {
-
+    return this.termsAgreementRepository.save(agreement);
   }
 
   async withdrawTerm(data: any)

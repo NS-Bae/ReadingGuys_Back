@@ -1,3 +1,4 @@
+import { IsBoolean, IsEnum } from 'class-validator';
 import { UserType, TermsTypes } from '../others/other.types';
 
 export class JWTPayloadDto
@@ -22,4 +23,13 @@ class UpdateTermsInnerDto
 export class UpdateTermsDto
 {
   data: UpdateTermsInnerDto;
+}
+
+export class TermsAgreementDto
+{
+  @IsEnum(TermsTypes)
+  termsType: TermsTypes;
+  
+  @IsBoolean()
+  agreed: boolean;
 }

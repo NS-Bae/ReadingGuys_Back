@@ -1,36 +1,43 @@
-import { PrimaryGeneratedColumn, Column, Entity } from "typeorm";
+import { PrimaryGeneratedColumn, Column, Entity, Index } from "typeorm";
 import { TermsStatus, TermsTypes } from "../others/other.types";
 
 
 @Entity( 'terms' )
+@Index('UQ_TERMS_TYPE_VERSION',
+  [ 'TermsTypes', 'Version' ],
+  { unique: true },
+ )
 export class Terms {
-  @PrimaryGeneratedColumn({ type: 'bigint' })
+  @PrimaryGeneratedColumn({ name: 'ID', type: 'bigint' })
   id: number;
 
-  @Column({ type: 'enum', enum: TermsTypes })
+  @Column({ name: 'TermsType', type: 'enum', enum: TermsTypes })
   termsType: TermsTypes;
 
-  @Column({ type: 'varchar', length: 100, nullable: false })
+  @Column({ name: 'Title', type: 'varchar', length: 100, nullable: false })
   title: string;
 
-  @Column({ type: 'varbinary', length: 1024, nullable: false })
+  @Column({ name: 'Version', type: 'varchar', length: 45, nullable: false })
+  Version: string;
+
+  @Column({ name: 'EncryptedStorageLink', type: 'varbinary', length: 1024, nullable: false })
   encryptedStorageLink: Buffer;
   
-  @Column({ type: 'varbinary', length: 12, nullable: false })
+  @Column({ name: 'IVStorageLink', type: 'varbinary', length: 12, nullable: false })
   ivStorageLink: Buffer;
   
-  @Column({ type: 'varbinary', length: 16, nullable: false })
+  @Column({ name: 'AuthTagStorageLink', type: 'varbinary', length: 16, nullable: false })
   authTagStorageLink: Buffer;
 
-  @Column({ type: 'datetime', nullable: false, name: 'Effective_date' })
+  @Column({ name: 'Effective_date', type: 'datetime', nullable: false })
   effectiveDate: Date;
 
-  @Column({ type: 'enum', enum: TermsStatus, nullable: false, default: TermsStatus.비활성화 })
+  @Column({ name: 'Status', type: 'enum', enum: TermsStatus, nullable: false, default: TermsStatus.비활성화 })
   status: TermsStatus;
 
-  @Column({ type: 'varchar', length: 100, nullable: false })
+  @Column({ name: 'CreatedBy', type: 'varchar', length: 100, nullable: false })
   createdBy: string;
 
-  @Column({ type: 'datetime', nullable: false })
+  @Column({ name: 'CreatedAt', type: 'datetime', nullable: false })
   createdAt: Date;
 }

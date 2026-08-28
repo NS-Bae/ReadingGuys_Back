@@ -5,6 +5,7 @@ import { User } from "../users/users.entity";
 
 @Entity( 'termsagreement' )
 @Index('idx_user_terms', ['hashedUserId', 'termsType'])
+@Index('UQ_USER_TERMS_VERSION', ['hashedUserId', 'termsType', 'version'], { unique: true })
 export class TermsAgreement {
   @PrimaryGeneratedColumn({ name: 'ID', type: 'bigint' })
   id: string;

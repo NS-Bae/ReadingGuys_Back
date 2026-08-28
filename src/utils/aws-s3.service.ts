@@ -144,5 +144,5 @@ export class AwsS3Service {
       console.error('S3 파일 읽기 실패:', error);
       throw error;
     }
-  }
+  };
 }

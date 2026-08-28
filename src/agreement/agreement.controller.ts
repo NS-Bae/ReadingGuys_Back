@@ -1,4 +1,4 @@
-import { Body, Controller, Get, Post, Query, Req, UploadedFile, UseInterceptors } from "@nestjs/common";
+import { Body, Controller, Get, Param, ParseEnumPipe, Post, Query, Req, UploadedFile, UseInterceptors } from "@nestjs/common";
 import { TermsAgreementService } from "./agreement.service";
 import { FileInterceptor } from "@nestjs/platform-express";
 import { Multer } from "multer";
@@ -8,7 +8,9 @@ import { multerConfig } from "../utils/multer.config";
 import { DeviceInfo } from "../auth/decorators/deviceInfo.decorator";
 
 import { RawLogInfoDto } from "../dto/log.dto";
-import { UpdateTermsDto } from "../dto/other.dto";
+import { TermsAgreementDto, UpdateTermsDto } from "../dto/other.dto";
+import { TermsTypes } from "../others/other.types";
+import { TermDataParamsDto } from "../dto/readFile.dto";
 
 @Controller('agreement')
 export class TermsAgreementController
@@ -34,11 +36,11 @@ export class TermsAgreementController
     return this.termsAgreementService.uploadNewTermsFile(data, hashedData, rawInfo);
   }
 
-  @Get('alllist')
+  /* @Get('alllist')
   async getLatestTerms(@Query('main') main: string)
   {
     return this.termsAgreementService.getAllTerms(main);
-  }
+  } */
 
   @Post('changedata')
   async updateTerms(
@@ -57,15 +59,26 @@ export class TermsAgreementController
     return this.termsAgreementService.updateTermsState(data, hashedData, rawInfo);
   }
 
-  @Get('readterm')
-  async readTerms(@Query('title') title: string, @Query('nowId') nowId: string)
+  @Get('current/:type')
+  async getCurrentActiveDocument(@Param('type', new ParseEnumPipe(TermsTypes)) type: TermsTypes): Promise<TermDataParamsDto>
   {
-    return this.termsAgreementService.readTermsService(title, nowId);
+    return this.termsAgreementService.getCurrentActiveDocument(type);
   }
 
   @Post('agree_terms')
-  async agreementToTerms(data: any)
+  async agreementToTerms(
+    @Req() req: any,
+    @CurrentUser('hashedUserId') hashedData: string,
+    @Body() data: TermsAgreementDto,
+  )
   {
-    return this.termsAgreementService.agreeTerm(data);
+    const userAgent = req.get('user-agent');
+    const rawInfo: RawLogInfoDto = {
+      rawInfo: {
+        deviceInfo: userAgent,
+        IPA: req.clientIp,
+      }
+    };
+    return this.termsAgreementService.agreeTerm(hashedData, data.termsType, data.agreed, rawInfo);
   }
 }
