@@ -4,7 +4,7 @@ import { TermsStatus, TermsTypes } from "../others/other.types";
 
 @Entity( 'terms' )
 @Index('UQ_TERMS_TYPE_VERSION',
-  [ 'TermsTypes', 'Version' ],
+  [ 'termsType', 'Version' ],
   { unique: true },
  )
 export class Terms {
