@@ -12,7 +12,7 @@ import { AwsS3Service } from '../utils/aws-s3.service';
 @Module({
   imports: [TypeOrmModule.forFeature([Workbook, Academy]), FirebaseModule, EventLogsModule],
   controllers: [WorkbookController],
-  providers: [WorkbookService, FirebaseService, AwsS3Service],
+  providers: [WorkbookService, AwsS3Service],
   exports: [WorkbookService],
 })
 export class WorkbooksModule {}
