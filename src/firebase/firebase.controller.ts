@@ -3,7 +3,6 @@ import { FirebaseService } from './firebase.service';
 import { CurrentUser } from '../auth/decorators/currentUser.decorator';
 import { RegisterFcmTokenDto } from '../dto/other.dto';
 
-@UseGuards(JwtAuthGuard)
 @Controller('fb')
 export class FirebaseController {
   constructor(private readonly firebaseService: FirebaseService) {}
