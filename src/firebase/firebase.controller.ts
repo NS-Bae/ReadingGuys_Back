@@ -1,4 +1,4 @@
-import { Controller, Post, Body, UseGuards } from '@nestjs/common';
+import { Controller, Post, Body } from '@nestjs/common';
 import { FirebaseService } from './firebase.service';
 import { CurrentUser } from '../auth/decorators/currentUser.decorator';
 import { RegisterFcmTokenDto } from '../dto/other.dto';

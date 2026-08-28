@@ -20,10 +20,7 @@ export class FirebaseService {
     }
 
   }
-  async registerToken(
-    hashedUserId: string,
-    token: string,
-  ): Promise<void>
+  async registerToken(hashedUserId: string, token: string): Promise<void>
   {
     /*
      * FCM 토큰은 기기를 식별하므로
