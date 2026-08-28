@@ -29,7 +29,7 @@ export class TermsAgreementDto
 {
   @IsEnum(TermsTypes)
   termsType: TermsTypes;
-  
+
   @IsBoolean()
   agreed: boolean;
 }

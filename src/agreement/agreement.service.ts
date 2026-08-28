@@ -20,6 +20,10 @@ import { TermDataParamsDto } from "src/dto/readFile.dto";
 export class TermsAgreementService
 {
   private readonly logger = new Logger(TermsAgreementService.name);
+  private readonly requiredTermsTypes: TermsTypes[] = [
+    TermsTypes.이용약관,
+    TermsTypes.개인정보,
+  ];
 
   constructor(
     @InjectRepository(TermsAgreement)
@@ -208,8 +212,37 @@ export class TermsAgreementService
     return this.termsAgreementRepository.save(agreement);
   }
 
-  async withdrawTerm(data: any)
+  async findRequiredTerms(hashedUserId: string, rawInfo: RawLogInfoDto)
   {
+    const requiredTerms: {
+      termsType: TermsTypes;
+      title: string;
+      Version: string;
+    }[] = [];
 
+    for(const termsType of this.requiredTermsTypes)
+    {
+      const currentDocument = await this.findCurrentActiveDocument(termsType);
+
+      const agreement = await this.termsAgreementRepository.findOne({
+        where: {
+          hashedUserId,
+          termsType,
+          version: currentDocument.Version,
+          agreed: true,
+        },
+      });
+
+      if(!agreement)
+      {
+        requiredTerms.push({
+          termsType: currentDocument.termsType,
+          title: currentDocument.title,
+          Version: currentDocument.Version,
+        });
+      }
+    }
+
+    return { requiredTerms };
   }
 }

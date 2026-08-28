@@ -65,10 +65,28 @@ export class TermsAgreementController
     return this.termsAgreementService.getCurrentActiveDocument(type);
   }
 
+  @Get('required')
+  async getRequiredTerms(
+    @Req() req: any,
+    @CurrentUser('hashedUserId') hashedData: string,
+    @DeviceInfo() { deviceInfo },
+  )
+  {
+    const userAgent = req.get('user-agent');
+    const rawInfo: RawLogInfoDto = {
+      rawInfo: {
+        deviceInfo: userAgent,
+        IPA: req.clientIp,
+      }
+    };
+    return this.termsAgreementService.findRequiredTerms(hashedData, rawInfo);
+  }
+
   @Post('agree_terms')
   async agreementToTerms(
     @Req() req: any,
     @CurrentUser('hashedUserId') hashedData: string,
+    @DeviceInfo() { deviceInfo },
     @Body() data: TermsAgreementDto,
   )
   {
