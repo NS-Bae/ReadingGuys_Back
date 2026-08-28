@@ -10,6 +10,7 @@ import { Academy } from '../academy/academy.entity';
  */import { decryptionAES256GCM, encryptAES256GCM } from "../utils/encryption.service";
 import { EventLogsService } from "../eventlogs/eventlogs.service";
 import { AwsS3Service } from "../utils/aws-s3.service";
+import { FirebaseService } from "src/firebase/firebase.service";
 
 import { RawLogInfoDto } from "../dto/log.dto";
 import { UploadBookDto, DownLoadBookDto, UpdateBookPaidDto } from '../dto/workbook.dto';
@@ -24,8 +25,8 @@ export class WorkbookService {
     private workbookRepository: Repository<Workbook>,
     @InjectRepository(Academy)
     private academyRepository: Repository<Academy>,
-/*     private readonly firebaseService : FirebaseService,
- */    private readonly eventLogsService: EventLogsService,
+    private readonly firebaseService : FirebaseService,
+    private readonly eventLogsService: EventLogsService,
     private dataSource: DataSource,
     private readonly awsS3Service: AwsS3Service,
   ) {}
@@ -150,6 +151,22 @@ export class WorkbookService {
       const savedWorkbook = await this.workbookRepository.save(newWorkbook);
 
       await this.eventLogsService.createBusinessLog({ log : {...logCommonData, data4: '교재업로드'} });
+
+      try
+      {
+        await this.firebaseService
+          .sendNewWorkbookNotification(
+            savedWorkbook.workbookId,
+            savedWorkbook.workbookName,
+          );
+      }
+      catch(pushError)
+      {
+        this.logger.error(
+          '문제집 업로드 알림 발송 실패',
+          pushError,
+        );
+      }
 
       return { message: "업로드 완료!", data: savedWorkbook };
     }
