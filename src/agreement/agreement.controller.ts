@@ -36,11 +36,16 @@ export class TermsAgreementController
     return this.termsAgreementService.uploadNewTermsFile(data, hashedData, rawInfo);
   }
 
-  /* @Get('alllist')
-  async getLatestTerms(@Query('main') main: string)
-  {
+  @Get('alllist')
+  async getTermsHistory(
+    @Query(
+      'main',
+      new ParseEnumPipe(TermsTypes),
+    )
+    main: TermsTypes,
+  ) {
     return this.termsAgreementService.getAllTerms(main);
-  } */
+  }
 
   @Post('changedata')
   async updateTerms(

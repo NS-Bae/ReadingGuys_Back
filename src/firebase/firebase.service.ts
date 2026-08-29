@@ -1,7 +1,7 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { In, Repository } from 'typeorm';
-import { cert, getApps, initializeApp } from 'firebase-admin/app';
+import { applicationDefault, getApps, initializeApp } from 'firebase-admin/app';
 import { getMessaging } from 'firebase-admin/messaging';
 import { FcmDeviceToken } from './fcmDeviceToken.entity';
 import { User } from '../users/users.entity';
@@ -12,20 +12,45 @@ export class FirebaseService {
   private readonly useFirebase: boolean;
   private firebaseReady = false;
   constructor(
-    @InjectRepository(FcmDeviceToken)
-    private readonly tokenRepository: Repository<FcmDeviceToken>,
-    @InjectRepository(User)
-    private usersRepository: Repository<User>,
-  )
-  {
-    const useFirebase = process.env.USE_FIREBASE === 'true';
+  @InjectRepository(FcmDeviceToken)
+  private readonly tokenRepository:
+    Repository<FcmDeviceToken>,
+) {
+  this.useFirebase =
+    process.env.USE_FIREBASE === 'true';
 
-    if(!this.useFirebase)
-    {
-      this.logger.warn('Firebase disabled by USE_FIREBASE=false');
-      return;
-    }
+  if(!this.useFirebase) {
+    this.logger.warn(
+      'Firebase disabled by USE_FIREBASE=false',
+    );
+
+    return;
   }
+
+  try {
+    if(getApps().length === 0) {
+      initializeApp({
+        credential: applicationDefault(),
+      });
+    }
+
+    this.firebaseReady = true;
+
+    this.logger.log(
+      'Firebase Admin 초기화 완료',
+    );
+  }
+  catch(error) {
+    this.firebaseReady = false;
+
+    this.logger.error(
+      'Firebase Admin 초기화 실패',
+      error instanceof Error
+        ? error.stack
+        : String(error),
+    );
+  }
+}
 
   async registerToken(hashedUserId: string, token: string): Promise<void>
   {

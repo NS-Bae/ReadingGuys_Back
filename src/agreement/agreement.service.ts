@@ -1,4 +1,4 @@
-import { Injectable, InternalServerErrorException, Logger, NotFoundException } from "@nestjs/common";
+import { BadRequestException, ConflictException, Injectable, InternalServerErrorException, Logger, NotFoundException } from "@nestjs/common";
 import { InjectRepository } from "@nestjs/typeorm";
 import { DataSource, In, LessThanOrEqual, Repository } from "typeorm";
 import { Multer } from 'multer';
@@ -45,52 +45,200 @@ export class TermsAgreementService
       data3: data3,
     };
   }
-  async uploadNewTermsFile(data: any, hashedData: string, rawInfo: RawLogInfoDto)
-  {
-    const category = data.main;
-    const contents = data.contents;
-    const device = rawInfo.rawInfo.deviceInfo;
-    const ia = rawInfo.rawInfo.IPA;
-    const time = new Date();
+  async uploadNewTermsFile(
+    data: any,
+    hashedUserId: string,
+    rawInfo: RawLogInfoDto,
+  ) {
+    const termsType = data.main as TermsTypes;
+    const contents = data.contents?.trim();
+    const title = data.title?.trim();
+    const version = data.Version?.trim();
+    const effectiveDate = new Date(data.effectiveDate);
 
-    const logCommonData = this.refineDto(hashedData, device, ia);
-    const fileName = `${category}_${time}.md`;
-    const key = `coreDocuments/${category}/${fileName}`;
+    if(
+      !Object.values(TermsTypes).includes(termsType) ||
+      !contents ||
+      !title ||
+      !version ||
+      Number.isNaN(effectiveDate.getTime())
+    ) {
+      throw new BadRequestException(
+        '문서 종류, 제목, 버전, 시행일, 본문을 모두 입력해 주세요.',
+      );
+    }
 
-    const result = await this.s3Service.uploadTerms(contents, key);
-    const encryptFilePath = encryptAES256GCM(result);
-
-    try
-    {
-      await this.dataSource.transaction(async (manager) => {
-          const term = manager.create(Terms, {
-            termsType: category,
-            title: fileName,
-            encryptedStorageLink: Buffer.from(encryptFilePath.encryptedData, 'hex'),
-            ivStorageLink: Buffer.from(encryptFilePath.iv, 'hex'),
-            authTagStorageLink: Buffer.from(encryptFilePath.authTag, 'hex'),
-            effectiveDate: time,//테스트
-            createdBy: hashedData,
-            createdAt: time,
-        });
-        
-        const saveRecord = await manager.save(term);
-
-        return saveRecord;
+    const duplicate =
+      await this.termsRepository.findOne({
+        where: {
+          termsType,
+          Version: version,
+        },
       });
 
-      await this.eventLogsService.createBusinessLog({log: { ...logCommonData, data4: '결과저장' }});
+    if(duplicate) {
+      throw new ConflictException(
+        '같은 종류와 버전의 문서가 이미 존재합니다.',
+      );
+    }
 
-      return { message: '시험 결과 저장 완료', result };
+    const safeVersion = version.replace(
+      /[^0-9A-Za-z._-]/g,
+      '_',
+    );
+
+    const fileName =
+      `${Date.now()}_${safeVersion}.md`;
+
+    const key =
+      `coreDocuments/${termsType}/${fileName}`;
+
+    const storageKey =
+      await this.s3Service.uploadTerms(
+        contents,
+        key,
+      );
+
+    const encryptedPath =
+      encryptAES256GCM(storageKey);
+
+    try {
+      const savedDocument =
+        await this.dataSource.transaction(
+          async manager => {
+            const document =
+              manager.create(Terms, {
+                termsType,
+                title,
+                Version: version,
+
+                encryptedStorageLink:
+                  Buffer.from(
+                    encryptedPath.encryptedData,
+                    'hex',
+                  ),
+
+                ivStorageLink:
+                  Buffer.from(
+                    encryptedPath.iv,
+                    'hex',
+                  ),
+
+                authTagStorageLink:
+                  Buffer.from(
+                    encryptedPath.authTag,
+                    'hex',
+                  ),
+
+                effectiveDate,
+                createdBy: hashedUserId,
+                createdAt: new Date(),
+              });
+
+            return manager.save(document);
+          },
+        );
+
+      return {
+        message: '문서가 등록되었습니다.',
+        data: {
+          id: savedDocument.id,
+          termsType:
+            savedDocument.termsType,
+          title: savedDocument.title,
+          Version: savedDocument.Version,
+          effectiveDate:
+            savedDocument.effectiveDate,
+          status: savedDocument.status,
+          createdAt:
+            savedDocument.createdAt,
+        },
+      };
     }
-    catch(error)
-    {
-      console.error('DB 저장 오류:', error);
-      await this.eventLogsService.createBusinessLog({log: { ...logCommonData, data4: '결과저장실패' }});
-      throw new InternalServerErrorException('시험 결과 DB 저장 실패');
+    catch(error) {
+      this.logger.error(
+        '문서 DB 저장 실패',
+        error,
+      );
+
+      if(
+        (error as any)?.code ===
+        'ER_DUP_ENTRY'
+      ) {
+        throw new ConflictException(
+          '같은 종류와 버전의 문서가 이미 존재합니다.',
+        );
+      }
+
+      throw new InternalServerErrorException(
+        '문서 정보를 저장하지 못했습니다.',
+      );
     }
-    console.log(key);
   }
+
+  async getAllTerms(type: TermsTypes) {
+  const documents =
+    await this.termsRepository.find({
+      where: {
+        termsType: type,
+      },
+      order: {
+        createdAt: 'DESC',
+        id: 'DESC',
+      },
+    });
+
+  return documents.map(document => ({
+    id: document.id,
+    termsType: document.termsType,
+    title: document.title,
+    Version: document.Version,
+    effectiveDate:
+      document.effectiveDate,
+    status: document.status,
+    createdAt: document.createdAt,
+  }));
+}
+
+async getDocumentById(
+  id: number,
+): Promise<TermDataParamsDto> {
+  const document =
+    await this.termsRepository.findOne({
+      where: {
+        id,
+      },
+    });
+
+  if(!document) {
+    throw new NotFoundException(
+      '문서를 찾을 수 없습니다.',
+    );
+  }
+
+  const key =
+    decryptionAES256GCM(
+      document.encryptedStorageLink,
+      document.ivStorageLink,
+      document.authTagStorageLink,
+    );
+
+  const content =
+    await this.s3Service.readTerms(key);
+
+  return {
+    id: document.id,
+    termsType: document.termsType,
+    title: document.title,
+    Version: document.Version,
+    effectiveDate:
+      document.effectiveDate,
+    status: document.status,
+    createdBy: document.createdBy,
+    createdAt: document.createdAt,
+    content,
+  };
+}
 
   //DB조회
   async findCurrentActiveDocument(type: TermsTypes)
